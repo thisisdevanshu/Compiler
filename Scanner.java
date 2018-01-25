@@ -294,37 +294,7 @@ public class Scanner {
 	 //TODO: Modify this to deal with the entire lexical specification
 	public Scanner scan() throws LexicalException {
 
-		Map<String,Kind> reservedWords =  new HashMap<>();
-		reservedWords.put("Z",Kind.KW_Z);
-		reservedWords.put("default_width",Kind.KW_default_width);
-		reservedWords.put("default_height",Kind.KW_default_height);
-		reservedWords.put("show",Kind.KW_show);
-		reservedWords.put("write",Kind.KW_write);
-		reservedWords.put("to",Kind.KW_to);
-		reservedWords.put("input",Kind.KW_input);
-		reservedWords.put("from",Kind.KW_from);
-		reservedWords.put("cart_x",Kind.KW_cart_x);
-		reservedWords.put("cart_y",Kind.KW_cart_y);
-		reservedWords.put("polar_a",Kind.KW_polar_a);
-		reservedWords.put("polar_r",Kind.KW_polar_r);
-		reservedWords.put("abs",Kind.KW_abs);
-		reservedWords.put("sin",Kind.KW_sin);
-		reservedWords.put("cos",Kind.KW_cos);
-		reservedWords.put("atan",Kind.KW_atan);
-		reservedWords.put("log",Kind.KW_log);
-		reservedWords.put("image",Kind.KW_image);
-		reservedWords.put("int",Kind.KW_int);
-		reservedWords.put("float",Kind.KW_float);
-		reservedWords.put("filename",Kind.KW_filename);
-		reservedWords.put("boolean",Kind.KW_boolean);
-		reservedWords.put("red",Kind.KW_red);
-		reservedWords.put("blue",Kind.KW_blue);
-		reservedWords.put("green",Kind.KW_green);
-		reservedWords.put("alpha",Kind.KW_alpha);
-		reservedWords.put("while",Kind.KW_while);
-		reservedWords.put("if",Kind.KW_if);
-		reservedWords.put("width",Kind.KW_width);
-		reservedWords.put("height",Kind.KW_height);
+		Map<String, Kind> reservedWords = getKindMap();
 
 		int pos = 0;
 		State state = State.START;
@@ -489,6 +459,12 @@ public class Scanner {
 						state = State.FLOAT;
 					}else{
 						//overflow check
+						String str = new String(chars).substring(startPos,pos);
+						try {
+							Integer.parseInt(str);
+						}catch(Exception e){
+							error(pos, 0, 0, e.getMessage());
+						}
 						tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos - startPos));
 						state = State.START;
 					}
@@ -517,7 +493,14 @@ public class Scanner {
 					if( Character.isDigit(ch)){
 						pos++;
 					}else{
-						//overflow check
+						//overflow checkString
+						String str = new String(chars).substring(startPos,pos);
+						try {
+							Float.parseFloat(str);
+						}catch(Exception e){
+							error(pos, 0, 0, e.getMessage());
+						}
+
 						tokens.add(new Token(Kind.FLOAT_LITERAL, startPos, pos - startPos));
 						state = State.START;
 					}
@@ -683,6 +666,41 @@ public class Scanner {
 		} // while
 			
 		return this;
+	}
+
+	private Map<String, Kind> getKindMap() {
+		Map<String, Kind> reservedWords =  new HashMap<>();
+		reservedWords.put("Z", Kind.KW_Z);
+		reservedWords.put("default_width", Kind.KW_default_width);
+		reservedWords.put("default_height", Kind.KW_default_height);
+		reservedWords.put("show", Kind.KW_show);
+		reservedWords.put("write", Kind.KW_write);
+		reservedWords.put("to", Kind.KW_to);
+		reservedWords.put("input", Kind.KW_input);
+		reservedWords.put("from", Kind.KW_from);
+		reservedWords.put("cart_x", Kind.KW_cart_x);
+		reservedWords.put("cart_y", Kind.KW_cart_y);
+		reservedWords.put("polar_a", Kind.KW_polar_a);
+		reservedWords.put("polar_r", Kind.KW_polar_r);
+		reservedWords.put("abs", Kind.KW_abs);
+		reservedWords.put("sin", Kind.KW_sin);
+		reservedWords.put("cos", Kind.KW_cos);
+		reservedWords.put("atan", Kind.KW_atan);
+		reservedWords.put("log", Kind.KW_log);
+		reservedWords.put("image", Kind.KW_image);
+		reservedWords.put("int", Kind.KW_int);
+		reservedWords.put("float", Kind.KW_float);
+		reservedWords.put("filename", Kind.KW_filename);
+		reservedWords.put("boolean", Kind.KW_boolean);
+		reservedWords.put("red", Kind.KW_red);
+		reservedWords.put("blue", Kind.KW_blue);
+		reservedWords.put("green", Kind.KW_green);
+		reservedWords.put("alpha", Kind.KW_alpha);
+		reservedWords.put("while", Kind.KW_while);
+		reservedWords.put("if", Kind.KW_if);
+		reservedWords.put("width", Kind.KW_width);
+		reservedWords.put("height", Kind.KW_height);
+		return reservedWords;
 	}
 
 

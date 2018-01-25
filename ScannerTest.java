@@ -275,6 +275,51 @@ public class ScannerTest {
 		checkNext(scanner, RPAREN, 13, 1, 1, 14);
 		checkNextIsEOF(scanner);
 	}
+
+	@Test
+	public void testIntegerOverFlow() throws LexicalException {
+		String input = "12345625727272727281";
+		show(input);
+		thrown.expect(LexicalException.class);
+		try {
+			new Scanner(input).scan();
+		} catch (LexicalException e) {  //Catch the exception
+			show(e);                    //Display it
+			assertEquals(20,e.getPos()); //Check that it occurred in the expected position
+			throw e;                    //Rethrow exception so JUnit will see it
+		}
+	}
+
+	@Test
+	public void testInteger() throws LexicalException {
+		String input = "1234562";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, INTEGER_LITERAL, 0, 7, 1, 1);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testFloat() throws LexicalException {
+		String input = ".1234562";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, FLOAT_LITERAL, 0, 8, 1, 1);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testComment() throws LexicalException {
+		String input = "/* dude */ boolean b := true;";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, KW_boolean, 11, 7, 1, 12);
+		checkNext(scanner, IDENTIFIER, 19, 1, 1, 20);
+		checkNext(scanner, OP_ASSIGN, 21, 2, 1, 22);
+		checkNext(scanner, BOOLEAN_LITERAL, 24, 4, 1, 25);
+		checkNext(scanner, SEMI, 28, 1, 1, 29);
+		checkNextIsEOF(scanner);
+	}
 }
 	
 
