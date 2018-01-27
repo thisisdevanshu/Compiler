@@ -217,6 +217,29 @@ public class ScannerTest {
 	}
 
 	@Test
+	public void testEqual() throws LexicalException {
+		String input = "== != :=";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, OP_EQ, 0, 2, 1, 1);
+		checkNext(scanner, OP_NEQ, 3, 2, 1, 4);
+		checkNext(scanner, OP_ASSIGN, 6, 2, 1, 7);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testDoubleStar() throws LexicalException {
+		String input = "***";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, OP_POWER, 0, 2, 1, 1);
+		checkNext(scanner, OP_TIMES, 2, 1, 1, 3);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
 	public void testIdentifier() throws LexicalException {
 		String input = "devanshu";
 		Scanner scanner = new Scanner(input).scan();
@@ -292,10 +315,13 @@ public class ScannerTest {
 
 	@Test
 	public void testInteger() throws LexicalException {
-		String input = "1234562";
+		String input = "0001234562";
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		checkNext(scanner, INTEGER_LITERAL, 0, 7, 1, 1);
+		checkNext(scanner, INTEGER_LITERAL, 0, 1, 1, 1);
+		checkNext(scanner, INTEGER_LITERAL, 1, 1, 1, 2);
+		checkNext(scanner, INTEGER_LITERAL, 2, 1, 1, 3);
+		checkNext(scanner, INTEGER_LITERAL, 3, 7, 1, 4);
 		checkNextIsEOF(scanner);
 	}
 
@@ -345,6 +371,86 @@ public class ScannerTest {
 			assertEquals(32,e.getPos()); //Check that it occurred in the expected position
 			throw e;                    //Rethrow exception so JUnit will see it
 		}
+	}
+
+	@Test
+	public void testTwoDotsNoSpace() throws LexicalException {
+		String input = "0.5..true";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, FLOAT_LITERAL, 0, 3, 1, 1);
+		checkNext(scanner, DOT, 3, 1, 1, 4);
+		checkNext(scanner, DOT, 4, 1, 1, 5);
+		checkNext(scanner, BOOLEAN_LITERAL, 5, 4, 1, 6);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testNoSpace() throws LexicalException {
+		String input = "cosatanlogabs";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, IDENTIFIER, 0, 13, 1, 1);
+		checkNextIsEOF(scanner);
+	}
+
+
+	@Test
+	public void testDoubleDot() throws LexicalException {
+		String input = "0..1";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, FLOAT_LITERAL, 0, 2, 1, 1);
+		checkNext(scanner, FLOAT_LITERAL, 2, 2, 1, 3);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testIdentifierNumber() throws LexicalException {
+		String input = "dev1_$";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, IDENTIFIER, 0, 6, 1, 1);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testIdentifierStart() throws LexicalException {
+		String input = "3dev1_$";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, IDENTIFIER, 0, 6, 1, 1);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testSingleChar() throws LexicalException {
+		String input = "({[)}]+-<<>><=>=@!,.?|%*/&";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, LPAREN, 0, 1, 1, 1);
+		checkNext(scanner, LBRACE, 1, 1, 1, 2);
+		checkNext(scanner, LSQUARE, 2, 1, 1, 3);
+		checkNext(scanner, RPAREN, 3, 1, 1, 4);
+		checkNext(scanner, RBRACE, 4, 1, 1, 5);
+		checkNext(scanner, RSQUARE, 5, 1, 1, 6);
+		checkNext(scanner, OP_PLUS, 6, 1, 1, 7);
+		checkNext(scanner, OP_MINUS, 7, 1, 1, 8);
+		checkNext(scanner, LPIXEL, 8, 2, 1, 9);
+		checkNext(scanner, RPIXEL, 10, 2, 1, 11);
+		checkNext(scanner, OP_LE, 12, 2, 1, 13);
+		checkNext(scanner, OP_GE, 14, 2, 1, 15);
+		checkNext(scanner, OP_AT, 16, 1, 1, 17);
+		checkNext(scanner, OP_EXCLAMATION, 17, 1, 1, 18);
+		checkNext(scanner, COMMA, 18, 1, 1, 19);
+		checkNext(scanner, DOT, 19, 1, 1, 20);
+		checkNext(scanner, OP_QUESTION, 20, 1, 1, 21);
+		checkNext(scanner, OP_OR, 21, 1, 1, 22);
+		checkNext(scanner, OP_MOD, 22, 1, 1, 23);
+		checkNext(scanner, OP_TIMES, 23, 1, 1, 24);
+		checkNext(scanner, OP_DIV, 24, 1, 1, 25);
+		checkNext(scanner, OP_AND, 25, 1, 1, 26);
+		checkNextIsEOF(scanner);
 	}
 }
 	

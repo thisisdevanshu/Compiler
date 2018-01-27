@@ -288,7 +288,7 @@ public class Scanner {
 
 
 	 private enum State {START,HAS_LESS,HAS_GREATER,HAS_EXCLAIM,HAS_ASTERISK,HAS_COLON,HAS_EQ,HAS_SLASH,HAS_DOT,COMMENT,
-		 				COMMENT_END,DIGIT,FLOAT,ALPHABET};  //TODO:  this is incomplete
+		 				COMMENT_END,DIGIT,FLOAT,ALPHABET,HAS_ZERO};  //TODO:  this is incomplete
 
 	 
 	 //TODO: Modify this to deal with the entire lexical specification
@@ -319,7 +319,7 @@ public class Scanner {
 						}
 						break;
 						case '0': {
-							tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos - startPos + 1));
+							state = State.HAS_ZERO;
 							pos++;
 						}
 						break;
@@ -392,6 +392,7 @@ public class Scanner {
 							state = State.HAS_EQ;
 							pos++;
 						}
+						break;
 						case '!': { //! !=
 							state = State.HAS_EXCLAIM;
 							pos++;
@@ -470,8 +471,20 @@ public class Scanner {
 					}
 				}
 				break;
+				case HAS_ZERO:{
+					if(ch == '.') {
+						state = State.FLOAT;
+						pos++;
+					}else {
+						tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos - startPos));
+						state = State.START;
+					}
+				}
+				break;
 				case ALPHABET: {
 					if( Character.isAlphabetic(ch)){
+						pos++;
+					}else if( Character.isDigit(ch)){
 						pos++;
 					}else if( ch == '_'){
 						pos++;
