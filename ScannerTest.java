@@ -320,6 +320,32 @@ public class ScannerTest {
 		checkNext(scanner, SEMI, 28, 1, 1, 29);
 		checkNextIsEOF(scanner);
 	}
+
+	@Test
+	public void testMultilineComment() throws LexicalException {
+		String input = "/* \r dude */ boolean \n  b := true;";
+		Scanner scanner = new Scanner(input).scan();
+		show(scanner);
+		checkNext(scanner, KW_boolean, 13, 7, 2, 10);
+		checkNext(scanner, IDENTIFIER, 24, 1, 3, 3);
+		checkNext(scanner, OP_ASSIGN, 26, 2, 3, 5);
+		checkNext(scanner, BOOLEAN_LITERAL, 29, 4, 3, 8);
+		checkNext(scanner, SEMI, 33, 1, 3, 12);
+		checkNextIsEOF(scanner);
+	}
+
+	@Test
+	public void testOpenComment() throws LexicalException {
+		String input = "/* \n dude  boolean \n  b := true;";
+		thrown.expect(LexicalException.class);  //Tell JUnit to expect a LexicalException
+		try {
+			new Scanner(input).scan();
+		} catch (LexicalException e) {  //Catch the exception
+			show(e);                    //Display it
+			assertEquals(32,e.getPos()); //Check that it occurred in the expected position
+			throw e;                    //Rethrow exception so JUnit will see it
+		}
+	}
 }
 	
 

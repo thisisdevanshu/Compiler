@@ -639,6 +639,18 @@ public class Scanner {
 							state = State.COMMENT_END;
 						}
 						break;
+						case ' ':
+						case '\n':
+						case '\r':
+						case '\t':
+						case '\f': {
+							pos++;
+						}
+						break;
+						case EOFChar: {
+							error(pos, 0, 0, "invalid comment");
+						}
+						break;
 						default: {
 							pos++;
 						}
