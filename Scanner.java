@@ -509,7 +509,9 @@ public class Scanner {
 						//overflow checkString
 						String str = new String(chars).substring(startPos,pos);
 						try {
-							Float.parseFloat(str);
+							if( !Float.isFinite(Float.parseFloat(str)) ){
+								error(pos, 0, 0,"float overflow");
+							}
 						}catch(Exception e){
 							error(pos, 0, 0, e.getMessage());
 						}
@@ -678,7 +680,6 @@ public class Scanner {
 						}
 						break;
 						default: {
-							pos++;
 							state = State.COMMENT;
 						}
 					}

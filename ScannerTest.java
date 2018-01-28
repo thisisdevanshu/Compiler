@@ -419,7 +419,8 @@ public class ScannerTest {
 		String input = "3dev1_$";
 		Scanner scanner = new Scanner(input).scan();
 		show(scanner);
-		checkNext(scanner, IDENTIFIER, 0, 6, 1, 1);
+		checkNext(scanner, INTEGER_LITERAL, 0, 1, 1, 1);
+		checkNext(scanner, IDENTIFIER, 1, 6, 1, 2);
 		checkNextIsEOF(scanner);
 	}
 
@@ -452,6 +453,8 @@ public class ScannerTest {
 		checkNext(scanner, OP_AND, 25, 1, 1, 26);
 		checkNextIsEOF(scanner);
 	}
+
+
 }
 	
 
