@@ -464,7 +464,7 @@ public class Scanner {
 						try {
 							Integer.parseInt(str);
 						}catch(Exception e){
-							error(pos, 0, 0, e.getMessage());
+							error(pos, line(pos), posInLine(pos), e.getMessage());
 						}
 						tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos - startPos));
 						state = State.START;
@@ -510,10 +510,10 @@ public class Scanner {
 						String str = new String(chars).substring(startPos,pos);
 						try {
 							if( !Float.isFinite(Float.parseFloat(str)) ){
-								error(pos, 0, 0,"float overflow");
+								error(pos, line(pos), posInLine(pos),"float overflow");
 							}
 						}catch(Exception e){
-							error(pos, 0, 0, e.getMessage());
+							error(pos, line(pos), posInLine(pos), e.getMessage());
 						}
 
 						tokens.add(new Token(Kind.FLOAT_LITERAL, startPos, pos - startPos));
@@ -617,7 +617,7 @@ public class Scanner {
 						}
 						break;
 						default: {
-							error(pos, 0, 0, " = undefined operator");
+							error(pos, line(pos), posInLine(pos), " = undefined operator");
 						}
 					}
 				}
@@ -663,7 +663,7 @@ public class Scanner {
 						}
 						break;
 						case EOFChar: {
-							error(pos, 0, 0, "invalid comment");
+							error(pos, line(pos), posInLine(pos), "invalid comment");
 						}
 						break;
 						default: {
@@ -686,7 +686,7 @@ public class Scanner {
 				}
 				break;
 				default: {
-					error(pos, 0, 0, "undefined state");
+					error(pos, line(pos), posInLine(pos), "undefined state");
 				}
 			}// switch state
 		} // while
