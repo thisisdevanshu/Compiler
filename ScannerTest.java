@@ -308,7 +308,7 @@ public class ScannerTest {
 			new Scanner(input).scan();
 		} catch (LexicalException e) {  //Catch the exception
 			show(e);                    //Display it
-			assertEquals(20,e.getPos()); //Check that it occurred in the expected position
+			assertEquals(0,e.getPos()); //Check that it occurred in the expected position
 			throw e;                    //Rethrow exception so JUnit will see it
 		}
 	}
