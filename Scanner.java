@@ -465,7 +465,7 @@ public class Scanner {
 						try {
 							Integer.parseInt(str);
 						}catch(Exception e){
-							error(pos, line(pos), posInLine(pos), e.getMessage());
+							error(startPos, line(startPos), posInLine(startPos), e.getMessage());
 						}
 						tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos - startPos));
 						state = State.START;
@@ -511,10 +511,10 @@ public class Scanner {
 						String str = new String(chars).substring(startPos,pos);
 						try {
 							if( !Float.isFinite(Float.parseFloat(str)) ){
-								error(pos, line(pos), posInLine(pos),"float overflow");
+								throw new Exception("float overflow");
 							}
 						}catch(Exception e){
-							error(pos, line(pos), posInLine(pos), e.getMessage());
+							error(startPos, line(startPos), posInLine(startPos), e.getMessage());
 						}
 
 						tokens.add(new Token(Kind.FLOAT_LITERAL, startPos, pos - startPos));
