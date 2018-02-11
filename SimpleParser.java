@@ -54,11 +54,11 @@ public class SimpleParser {
 		match(IDENTIFIER);
 		block();
 	}
-	
+
 	/*
 	 * Block ::=  { (  (Declaration | Statement) ; )* }
 	 */
-	
+
 	Kind[] firstDec = { KW_int, KW_boolean, KW_image, KW_float, KW_filename };
 	Kind[] firstStatement = {KW_input, KW_write, IDENTIFIER, KW_if, KW_show, KW_sleep, KW_red, KW_green, KW_blue,KW_alpha };
 
@@ -75,7 +75,7 @@ public class SimpleParser {
 		match(RBRACE);
 
 	}
-	
+
 	public void declaration() throws SyntaxException{
 
 		if(isKind(KW_image)){
@@ -86,8 +86,6 @@ public class SimpleParser {
 				match(COMMA);
 				expression();
 				match(LSQUARE);
-			}else{
-				throw new SyntaxException(t,"Wrong way of declaring image type");
 			}
 		}else if( isKind(KW_int) || isKind(KW_float) || isKind(KW_boolean) || isKind(KW_filename)  ) {
 			type();
@@ -96,21 +94,74 @@ public class SimpleParser {
 			throw new SyntaxException(t,"Wrong way of declaring type");
 		}
 	}
-	
-	public void statement() {
+
+	public void statement() throws SyntaxException{
+
+		if(isKind(KW_input)){
+			statementInput();
+		}else if(isKind(KW_write)){
+			statementWrite();
+		}else if(isKind(KW_while)) {
+			statementWhile();
+		}else if(isKind(KW_if)){
+			statementIf();
+		}else if(isKind(KW_show)){
+			statementShow();
+		}else if(isKind(KW_sleep)){
+			statementSleep();
+		}else if(isKind(IDENTIFIER) || isKind(KW_red) || isKind(KW_green) || isKind(KW_blue) || isKind(KW_alpha)){
+				LHS();
+				match(OP_ASSIGN);
+				expression();
+		}else{
+			throw new SyntaxException(t,"Invalid statement");
+		}
+	}
+
+	public void expression() throws SyntaxException{
 		//TODO
 		throw new UnsupportedOperationException();
 	}
 
-	public void expression(){
+	public void type() throws SyntaxException{
 		//TODO
 		throw new UnsupportedOperationException();
 	}
 
-	public void type(){
+	public void statementInput() throws SyntaxException{
 		//TODO
 		throw new UnsupportedOperationException();
 	}
+
+	public void statementWrite() throws SyntaxException{
+		//TODO
+		throw new UnsupportedOperationException();
+	}
+
+	public void statementWhile() throws SyntaxException{
+		//TODO
+		throw new UnsupportedOperationException();
+	}
+
+	public void statementIf() throws SyntaxException{
+		//TODO
+		throw new UnsupportedOperationException();
+	}
+
+	public void statementShow() throws SyntaxException{
+		//TODO
+		throw new UnsupportedOperationException();
+	}
+
+	public void statementSleep() throws SyntaxException{
+		//TODO
+		throw new UnsupportedOperationException();
+	}
+	public void LHS() throws SyntaxException{
+		//TODO
+		throw new UnsupportedOperationException();
+	}
+
 	protected boolean isKind(Kind kind) {
 		return t.kind == kind;
 	}
@@ -126,7 +177,7 @@ public class SimpleParser {
 
 	/**
 	 * Precondition: kind != EOF
-	 * 
+	 *
 	 * @param kind
 	 * @return
 	 * @throws SyntaxException
@@ -144,8 +195,8 @@ public class SimpleParser {
 	private Token consume() throws SyntaxException {
 		Token tmp = t;
 		if (isKind( EOF)) {
-			throw new SyntaxException(t,"Syntax Error"); //TODO  give a better error message!  
-			//Note that EOF should be matched by the matchEOF method which is called only in parse().  
+			throw new SyntaxException(t,"Syntax Error"); //TODO  give a better error message!
+			//Note that EOF should be matched by the matchEOF method which is called only in parse().
 			//Anywhere else is an error. */
 		}
 		t = scanner.nextToken();
@@ -156,7 +207,7 @@ public class SimpleParser {
 	/**
 	 * Only for check at end of program. Does not "consume" EOF so no attempt to get
 	 * nonexistent next Token.
-	 * 
+	 *
 	 * @return
 	 * @throws SyntaxException
 	 */
@@ -166,7 +217,7 @@ public class SimpleParser {
 		}
 		throw new SyntaxException(t,"Syntax Error"); //TODO  give a better error message!
 	}
-	
+
 
 }
 
