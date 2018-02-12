@@ -87,6 +87,40 @@ public class SimpleParserTest {
 		SimpleParser parser = makeParser(input);
 		parser.parse();
 	}
+
+	@Test
+	public void testDec1() throws LexicalException, SyntaxException {
+		String input = "b{int c; " +
+				"float b; " +
+				"boolean c; " +
+				"image d; " +
+				"filename e; " +
+				"image f [true,4]; }";
+		SimpleParser parser = makeParser(input);
+		parser.parse();
+	}
+
+	@Test
+	public void testDec2() throws LexicalException, SyntaxException {
+		String input = "b{input IDENTIFIER from @ 1; " +
+				"write IDENTIFIER to IDENTIFIER;" +
+				"while (abc>def){}; " +
+				"if (false){}; " +
+				"show atan(1);" +
+				"sleep Z; }";
+		SimpleParser parser = makeParser(input);
+		parser.parse();
+	}
+
+	@Test
+	public void testDec3() throws LexicalException, SyntaxException {
+		String input = "b{ " +
+				"show +true;" +
+				"red ( IDENTIFIER  [ 3+5+2-1-5 , 9**9/3%2 ] ):= 45 != 9;" +
+				"sleep true  ?  123.56  :  1;}";
+		SimpleParser parser = makeParser(input);
+		parser.parse();
+	}
 	
 
 }

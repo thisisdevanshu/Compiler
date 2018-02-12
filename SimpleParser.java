@@ -15,8 +15,6 @@ package cop5556sp18;
 
 import cop5556sp18.Scanner.Token;
 import cop5556sp18.Scanner.Kind;
-import sun.tools.tree.OrExpression;
-
 import static cop5556sp18.Scanner.Kind.*;
 
 
@@ -125,6 +123,7 @@ public class SimpleParser {
 	public void expression() throws SyntaxException{
 		orExpression();
 		if(isKind(OP_QUESTION)){
+			match(OP_QUESTION);
 			expression();
 			match(OP_COLON);
 			expression();
@@ -257,7 +256,7 @@ public class SimpleParser {
 		}else if(isKind(LPIXEL)){
 			pixelConstructor();
 		}else{
-			throw new SyntaxException(t,"Invalid primary");
+			throw new SyntaxException(t,"Invalid primary "+t.kind+" "+t.posInLine());
 		}
 	}
 
@@ -310,7 +309,7 @@ public class SimpleParser {
 			expression();
 			match(RSQUARE);
 		}else{
-			throw new SyntaxException(t,"Invalid function Application"+t.kind+" "+t.posInLine());
+			throw new SyntaxException(t,"Invalid function Application "+t.kind+" "+t.posInLine());
 		}
 	}
 
@@ -448,7 +447,8 @@ public class SimpleParser {
 			consume();
 			return tmp;
 		}
-		throw new SyntaxException(t,"Syntax Error. Expected"+t.kind+"found "+kind+" at "+t.posInLine()); //TODO  give a better error message!
+		throw new SyntaxException(t,"Syntax Error. Expected "+t.kind+" found "+kind+" at "+t.posInLine()+" Line "+ t.line());
+		//TODO  give a better error message!
 	}
 
 
