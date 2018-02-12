@@ -62,14 +62,14 @@ public class SimpleParser {
 	 */
 
 	Kind[] firstDec = { KW_int, KW_boolean, KW_image, KW_float, KW_filename };
-	Kind[] firstStatement = {KW_input, KW_write, IDENTIFIER, KW_if, KW_show, KW_sleep, KW_red, KW_green, KW_blue,KW_alpha };
+	Kind[] firstStatement = {KW_input, KW_write, KW_while, IDENTIFIER, KW_if, KW_show, KW_sleep, KW_red, KW_green, KW_blue,KW_alpha };
 	Kind[] functionName = {KW_sin, KW_cos, KW_atan, KW_abs, KW_log, KW_cart_x, KW_cart_y, KW_polar_a, KW_polar_r,
 	KW_int, KW_float, KW_width, KW_height, KW_red, KW_green, KW_blue, KW_alpha};
 	Kind[] predefinedName = {KW_Z, KW_default_height, KW_default_width};
 
 	public void block() throws SyntaxException {
 		match(LBRACE);
-		while (isKind(firstDec)|isKind(firstStatement)) {
+		while (isKind(firstDec)|| isKind(firstStatement)) {
 	     if (isKind(firstDec)) {
 			declaration();
 		} else if (isKind(firstStatement)) {
@@ -84,13 +84,14 @@ public class SimpleParser {
 	public void declaration() throws SyntaxException{
 
 		if(isKind(KW_image)){
+			match(KW_image);
 			match(IDENTIFIER);
 			if(isKind(LSQUARE)) {
 				match(LSQUARE);
 				expression();
 				match(COMMA);
 				expression();
-				match(LSQUARE);
+				match(RSQUARE);
 			}
 		}else if( isKind(KW_int) || isKind(KW_float) || isKind(KW_boolean) || isKind(KW_filename)  ) {
 			type();
@@ -151,7 +152,7 @@ public class SimpleParser {
 		while(isKind(OP_EQ) || isKind(OP_NEQ)){
 			if(isKind(OP_EQ)){
 				match(OP_EQ);
-			}else{
+			}else if(isKind(OP_NEQ)){
 				match(OP_NEQ);
 			}
 			relExpression();
@@ -168,7 +169,7 @@ public class SimpleParser {
 				match(OP_LE);
 			}if(isKind(OP_GT)){
 				match(OP_GT);
-			}else{
+			}else if(isKind(OP_GE)){
 				match(OP_GE);
 			}
 			addExpression();
@@ -309,7 +310,7 @@ public class SimpleParser {
 			expression();
 			match(RSQUARE);
 		}else{
-			throw new SyntaxException(t,"Invalid function Application");
+			throw new SyntaxException(t,"Invalid function Application"+t.kind+" "+t.posInLine());
 		}
 	}
 
@@ -447,7 +448,7 @@ public class SimpleParser {
 			consume();
 			return tmp;
 		}
-		throw new SyntaxException(t,"Syntax Error"); //TODO  give a better error message!
+		throw new SyntaxException(t,"Syntax Error. Expected"+t.kind+"found "+kind+" at "+t.posInLine()); //TODO  give a better error message!
 	}
 
 
