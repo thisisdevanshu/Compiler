@@ -128,7 +128,9 @@ public class SimpleParserTest {
 				"if(log(2/3)){};" +
 				" input IDENTIFIER from @ cart_x(100%4); z := cart_y(5**2)? polar_a(123.9090): polar_r(0.1); " +
 				"abc := int(6); xyz := float(2); ret := width(1234); b := height(456) != red(12) & green(234); " +
-				" qwe := blue(445) <= alpha(45); }";
+				" qwe := blue(445) <= alpha(45);" +
+				" i := <<  Expression , Expression , Expression , Expression  >>;" +
+				" def := +a <= -r; }";
 		SimpleParser parser = makeParser(input);
 		parser.parse();
 	}
