@@ -117,11 +117,21 @@ public class SimpleParserTest {
 		String input = "b{ " +
 				"show +true;" +
 				"red ( IDENTIFIER  [ 3+5+2-1-5 , 9**9/3%2 ] ):= 45 != 9;" +
-				"sleep true  ?  123.56  :  1;}";
+				"sleep true  ?  123.56  :  1;" +
+				"while(default_height){}; }";
 		SimpleParser parser = makeParser(input);
 		parser.parse();
 	}
-	
+	@Test
+	public void testDec4() throws LexicalException, SyntaxException {
+		String input = "b{ show sin(1); sleep cos(a); show atan(true); while(abs(1+2)){}; " +
+				"if(log(2/3)){};" +
+				" input IDENTIFIER from @ cart_x(100%4); z := cart_y(5**2)? polar_a(123.9090): polar_r(0.1); " +
+				"abc := int(6); xyz := float(2); ret := width(1234); b := height(456) != red(12) & green(234); " +
+				" qwe := blue(445) <= alpha(45); }";
+		SimpleParser parser = makeParser(input);
+		parser.parse();
+	}
 
 }
 	
