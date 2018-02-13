@@ -447,8 +447,7 @@ public class SimpleParser {
 			consume();
 			return tmp;
 		}
-		throw new SyntaxException(t,"Syntax Error. Expected "+t.kind+" found "+kind+" at "+t.posInLine()+" Line "+ t.line());
-		//TODO  give a better error message!
+		throw new SyntaxException(t,"Syntax Error. Expected "+t.kind+" found "+kind+" at Line "+t.line()+" position "+ t.posInLine());
 	}
 
 
