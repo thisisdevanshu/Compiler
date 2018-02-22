@@ -284,10 +284,8 @@ public class Parser {
 				return expression;
 			}
 		}
-
 	}
 	public Expression primary() throws SyntaxException {
-		//todo
 		Token firstToken = t;
 		Expression expression = null;
 		if(isKind(INTEGER_LITERAL)){
@@ -295,23 +293,29 @@ public class Parser {
 			match(INTEGER_LITERAL);
 			expression = new ExpressionIntegerLiteral(firstToken,intLiteral);
 		}else if(isKind(BOOLEAN_LITERAL)){
+			Token booleanLiteral = t;
 			match(BOOLEAN_LITERAL);
+			expression = new ExpressionBooleanLiteral(firstToken,booleanLiteral);
 		}else if(isKind(FLOAT_LITERAL)){
+			Token floatLiteral = t;
 			match(FLOAT_LITERAL);
+			expression = new ExpressionFloatLiteral(firstToken,floatLiteral);
 		}else if(isKind(LPAREN)){
 			match(LPAREN);
-			expression();
+			expression = expression();
 			match(RPAREN);
 		}else if(isKind(functionName)){
-			functionApplication();
+			expression = functionApplication();
 		}else if(isKind(IDENTIFIER)){
 			Token name = t;
 			match(IDENTIFIER);
 			expression = new ExpressionIdent(firstToken,name);
 			if(isKind(LSQUARE)){
-				pixelSelector();
+				PixelSelector pixelSelector = pixelSelector();
+				expression = new ExpressionPixel(firstToken,name,pixelSelector);
 			}
 		}else if(isKind(predefinedName)){
+			Token name = t;
 				if(isKind(KW_Z)){
 					match(KW_Z);
 				}else if(isKind(KW_default_height)){
@@ -319,16 +323,19 @@ public class Parser {
 				}else if(isKind(KW_default_width)){
 					match(KW_default_width);
 				}
+			expression = new ExpressionPredefinedName(firstToken,name);
 		}else if(isKind(LPIXEL)){
-			pixelConstructor();
+			expression = pixelConstructor();
 		}else{
 			throw new SyntaxException(t,"Invalid primary "+t.kind+" "+t.posInLine());
 		}
 		return expression;
 	}
 
-	public void functionApplication() throws SyntaxException{
-
+	public Expression functionApplication() throws SyntaxException{
+		Token firstToken = t;
+		Token function = t;
+		Expression expression = null;
 		if(isKind(KW_sin) ){
 			match(KW_sin);
 		}else if(isKind(KW_cos)){
@@ -367,29 +374,34 @@ public class Parser {
 
 		if(isKind(LPAREN)){
 			match(LPAREN);
-			expression();
+			Expression e = expression();
 			match(RPAREN);
+			expression = new ExpressionFunctionAppWithExpressionArg(firstToken,function,e);
 		}else if(isKind(LSQUARE)){
 			match(LSQUARE);
-			expression();
+			Expression e0 = expression();
 			match(COMMA);
-			expression();
+			Expression e1 = expression();
 			match(RSQUARE);
+			expression = new ExpressionFunctionAppWithPixel(firstToken,function,e0,e1);
 		}else{
 			throw new SyntaxException(t,"Invalid function Application "+t.kind+" "+t.posInLine());
 		}
+		return expression;
 	}
 
-	public void pixelConstructor() throws SyntaxException{
+	public Expression pixelConstructor() throws SyntaxException{
+		Token firstToken = t;
 			match(LPIXEL);
-			expression();
+			Expression alpha = expression();
 			match(COMMA);
-			expression();
+			Expression red = expression();
 			match(COMMA);
-			expression();
+			Expression green = expression();
 			match(COMMA);
-			expression();
+			Expression blue = expression();
 			match(RPIXEL);
+			return new ExpressionPixelConstructor(firstToken,alpha,red,green,blue);
 	}
 
 	public void type() throws SyntaxException{
@@ -405,83 +417,94 @@ public class Parser {
 	}
 
 	public Statement statementInput() throws SyntaxException{
-		StatementInput  statementInput = null;
+		Token firstToken = t;
 		match(KW_input);
+		Token destName = t;
 		match(IDENTIFIER);
 		match(KW_from);
 		match(OP_AT);
-		expression();
-		return null;
+		Expression expression = expression();
+		return new StatementInput(firstToken, destName, expression);
 	}
 
 	public Statement statementWrite() throws SyntaxException{
-		//todo
+		Token firstToken = t;
 		match(KW_write);
+		Token sourceName = t;
 		match(IDENTIFIER);
 		match(KW_to);
+		Token destName = t;
 		match(IDENTIFIER);
-		return null;
+		return new StatementWrite(firstToken, sourceName, destName);
 	}
 	public Statement  statementAssignment() throws SyntaxException{
-		//todo
-		LHS();
+		Token firstToken = t;
+		LHS lhs = LHS();
 		match(OP_ASSIGN);
-		expression();
-		return null;
+		Expression expression = expression();
+		return new StatementAssign(firstToken,lhs,expression);
 	}
 
 	public Statement statementWhile() throws SyntaxException{
-		//todo
+		Token firstToken = t;
 		match(KW_while);
 		match(LPAREN);
-		expression();
+		Expression guard = expression();
 		match(RPAREN);
-		block();
-		return null;
+		Block block = block();
+		return new StatementWhile(firstToken,guard,block);
 	}
 
 	public Statement statementIf() throws SyntaxException{
-		//todo
+		Token firstToken = t;
 		match(KW_if);
 		match(LPAREN);
-		expression();
+		Expression guard = expression();
 		match(RPAREN);
-		block();
-		return null;
+		Block block = block();
+		return new StatementIf(firstToken, guard, block);
 	}
 
 	public Statement statementShow() throws SyntaxException{
-		//todo
+		Token firstToken = t;
 		match(KW_show);
-		expression();
-		return null;
+		Expression expression = expression();
+		return new StatementShow(firstToken, expression);
 	}
 
 	public Statement statementSleep() throws SyntaxException{
-		//todo
+		Token firstToken = t;
 		match(KW_sleep);
-		expression();
-		return null;
+		Expression duration = expression();
+		return new StatementSleep(firstToken, duration);
 	}
-	public Statement LHS() throws SyntaxException{
+	public LHS LHS() throws SyntaxException{
+		LHS lhs = null;
+		Token firstToken = t;
 		if(isKind(IDENTIFIER)){
+			Token name = t;
 			match(IDENTIFIER);
+			lhs = new LHSIdent(firstToken, name);
 			if(isKind(LSQUARE)){
-				pixelSelector();
+				PixelSelector pixelSelector = pixelSelector();
+				lhs = new LHSPixel(firstToken,name,pixelSelector);
 			}
 		}else if(isKind(KW_red) || isKind(KW_green) || isKind(KW_blue) || isKind(KW_alpha) ){
-			color();
+			Token color = color();
 			match(LPAREN);
+			Token name = t;
 			match(IDENTIFIER);
-			pixelSelector();
+			PixelSelector pixelSelector = pixelSelector();
 			match(RPAREN);
+			lhs = new LHSSample(firstToken,name,pixelSelector,color);
 		}else{
 			throw new SyntaxException(t,"Invalid LHS");
 		}
-		return null;
+		return lhs;
 	}
 
-	public void color() throws SyntaxException {
+	public Token color() throws SyntaxException {
+		Token color = t;
 		if(isKind(KW_red)){
 			match(KW_red);
 		} else if(isKind(KW_green)){
@@ -493,16 +516,17 @@ public class Parser {
 		}else {
 			throw new SyntaxException(t, "Invalid color");
 		}
+		return color;
 	}
 
-	public Expression pixelSelector() throws SyntaxException {
-		//todo
+	public PixelSelector pixelSelector() throws SyntaxException {
+		Token firstToken = t;
 		match(LSQUARE);
-		expression();
+		Expression ex = expression();
 		match(COMMA);
-		expression();
+		Expression ey = expression();
 		match(RSQUARE);
-		return null;
+		return new PixelSelector(firstToken, ex, ey);
 	}
 
 	protected boolean isKind(Kind kind) {
