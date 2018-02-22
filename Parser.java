@@ -1,6 +1,6 @@
 package cop5556sp18;
 /* *
- * Initial code for SimpleParser for the class project in COP5556 Programming Language Principles 
+ * Initial code for Parser for the class project in COP5556 Programming Language Principles
  * at the University of Florida, Spring 2018.
  * 
  * This software is solely for the educational benefit of students 
@@ -13,12 +13,19 @@ package cop5556sp18;
  */
 
 
+
+import cop5556sp18.AST.*;
 import cop5556sp18.Scanner.Token;
 import cop5556sp18.Scanner.Kind;
+
+import javax.swing.plaf.nimbus.State;
+import java.util.ArrayList;
+import java.util.List;
+
 import static cop5556sp18.Scanner.Kind.*;
 
 
-public class SimpleParser {
+public class Parser {
 	
 	@SuppressWarnings("serial")
 	public static class SyntaxException extends Exception {
@@ -36,23 +43,26 @@ public class SimpleParser {
 	Scanner scanner;
 	Token t;
 
-	SimpleParser(Scanner scanner) {
+	Parser(Scanner scanner) {
 		this.scanner = scanner;
 		t = scanner.nextToken();
 	}
 
 
-	public void parse() throws SyntaxException {
-		program();
+	public Program parse() throws SyntaxException {
+		Program program = program();
 		matchEOF();
+		return  program;
 	}
 
 	/*
 	 * Program ::= Identifier Block
 	 */
-	public void program() throws SyntaxException {
+	public Program program() throws SyntaxException {
+		Token firstToken = t;
 		match(IDENTIFIER);
-		block();
+		Block block = block();
+		return new Program(firstToken, firstToken, block);
 	}
 
 	/*
@@ -65,103 +75,134 @@ public class SimpleParser {
 	KW_int, KW_float, KW_width, KW_height, KW_red, KW_green, KW_blue, KW_alpha};
 	Kind[] predefinedName = {KW_Z, KW_default_height, KW_default_width};
 
-	public void block() throws SyntaxException {
+	public Block block() throws SyntaxException {
+		Token firstToken = t;
+		List<ASTNode>  decsOrStatements = new ArrayList<>();
 		match(LBRACE);
 		while (isKind(firstDec)|| isKind(firstStatement)) {
 	     if (isKind(firstDec)) {
-			declaration();
+			Declaration declaration = declaration();
+			 decsOrStatements.add(declaration);
 		} else if (isKind(firstStatement)) {
-			statement();
+			Statement statement = statement();
+			decsOrStatements.add(statement);
 		}
 			match(SEMI);
 		}
 		match(RBRACE);
-
+		return new Block(firstToken, decsOrStatements);
 	}
 
-	public void declaration() throws SyntaxException{
+	public Declaration declaration() throws SyntaxException{
 
+
+		Token firstToken = t;
+		Token type = t;
+		Token name = null;
+		Expression width = null;
+		Expression height = null;
 		if(isKind(KW_image)){
 			match(KW_image);
+			name = t;
 			match(IDENTIFIER);
 			if(isKind(LSQUARE)) {
 				match(LSQUARE);
-				expression();
+				width = expression();
 				match(COMMA);
-				expression();
+				height = expression();
 				match(RSQUARE);
 			}
 		}else if( isKind(KW_int) || isKind(KW_float) || isKind(KW_boolean) || isKind(KW_filename)  ) {
 			type();
+			name = t;
 			match(IDENTIFIER);
 		}else{
 			throw new SyntaxException(t,"Wrong way of declaring type");
 		}
+		return new Declaration(firstToken,type,name,width,height);
 	}
 
-	public void statement() throws SyntaxException{
+	public Statement statement() throws SyntaxException{
 
+		Statement statement = null;
 		if(isKind(KW_input)){
-			statementInput();
+			statement = statementInput();
 		}else if(isKind(KW_write)){
-			statementWrite();
+			statement = statementWrite();
 		}else if(isKind(IDENTIFIER) || isKind(KW_red) || isKind(KW_green) || isKind(KW_blue) || isKind(KW_alpha)){
-			statementAssignment();
+			statement = statementAssignment();
 		}else if(isKind(KW_while)) {
-			statementWhile();
+			statement = statementWhile();
 		}else if(isKind(KW_if)){
-			statementIf();
+			statement = statementIf();
 		}else if(isKind(KW_show)){
-			statementShow();
+			statement = statementShow();
 		}else if(isKind(KW_sleep)){
-			statementSleep();
+			statement = statementSleep();
 		}else{
 			throw new SyntaxException(t,"Invalid statement");
 		}
+		return statement;
 	}
 
-	public void expression() throws SyntaxException{
-		orExpression();
+	public Expression expression() throws SyntaxException{
+		Token firstToken = t;
+		Expression expression = orExpression();
 		if(isKind(OP_QUESTION)){
 			match(OP_QUESTION);
-			expression();
+			Expression trueExpression = expression();
 			match(OP_COLON);
-			expression();
+			Expression falseExpression = expression();
+			return new ExpressionConditional(firstToken,expression,trueExpression,falseExpression);
 		}
+		return expression;
 	}
 
-	public void orExpression() throws SyntaxException {
-		andExpression();
+	public Expression orExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression leftExpression = andExpression();
 		while(isKind(OP_OR)){
+			Token op = t;
 			match(OP_OR);
-			andExpression();
+			Expression rightExpression = andExpression();
+			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
+		return leftExpression;
 	}
 
-	public void andExpression() throws SyntaxException {
-		eqExpression();
+	public Expression andExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression leftExpression =  eqExpression();
 		while(isKind(OP_AND)){
+			Token op = t;
 			match(OP_AND);
-			eqExpression();
+			Expression rightExpression =  eqExpression();
+			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
+		return leftExpression;
 	}
 
-	public void eqExpression() throws SyntaxException {
-		relExpression();
+	public Expression eqExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression leftExpression = relExpression();
 		while(isKind(OP_EQ) || isKind(OP_NEQ)){
+			Token op = t;
 			if(isKind(OP_EQ)){
 				match(OP_EQ);
 			}else if(isKind(OP_NEQ)){
 				match(OP_NEQ);
 			}
-			relExpression();
+			Expression rightExpression =  relExpression();
+			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
-
+		return leftExpression;
 	}
 
-	public void relExpression() throws SyntaxException {
-		addExpression();
+	public Expression relExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression leftExpression = addExpression();
 		while(isKind(OP_LT) || isKind(OP_LE) || isKind(OP_GT) || isKind(OP_GE)){
+			Token op = t;
 			if(isKind(OP_LT)){
 				match(OP_LT);
 			}else if(isKind(OP_LE)){
@@ -171,26 +212,32 @@ public class SimpleParser {
 			}else if(isKind(OP_GE)){
 				match(OP_GE);
 			}
-			addExpression();
+			Expression rightExpression =  addExpression();
+			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
-
-
+		return leftExpression;
 	}
 
-	public void addExpression() throws SyntaxException {
-		multExpression();
+	public Expression addExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression leftExpression = multExpression();
 		while(isKind(OP_PLUS) || isKind(OP_MINUS)){
+			Token op = t;
 			if(isKind(OP_PLUS)){
 				match(OP_PLUS);
 			}else{
 				match(OP_MINUS);
 			}
-			multExpression();
+			Expression rightExpression =  multExpression();
+			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
+		return leftExpression;
 	}
-	public void multExpression() throws SyntaxException {
-		powerExpression();
+	public Expression multExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression leftExpression = powerExpression();
 		while(isKind(OP_TIMES) || isKind(OP_DIV) || isKind(OP_MOD)){
+			Token op = t;
 			if(isKind(OP_TIMES)){
 				match(OP_TIMES);
 			}else if(isKind(OP_DIV)){
@@ -198,38 +245,55 @@ public class SimpleParser {
 			}else{
 				match(OP_MOD);
 			}
-			powerExpression();
+			Expression rightExpression =  powerExpression();
+			new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
+		return leftExpression;
 	}
 
-	public void powerExpression() throws SyntaxException {
-		unaryExpression();
+	public Expression powerExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression leftExpression = unaryExpression();
 		if(isKind(OP_POWER)){
+			Token op = t;
 			match(OP_POWER);
-			powerExpression();
+			Expression rightExpression =  powerExpression();
+			new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
+		return leftExpression;
 	}
 
-	public void unaryExpression() throws SyntaxException {
+	public Expression unaryExpression() throws SyntaxException {
+		Token firstToken = t;
+		Token op = t;
 		if(isKind(OP_PLUS)){
 			match(OP_PLUS);
-			unaryExpression();
+			Expression expression = unaryExpression();
+			return new ExpressionUnary(firstToken,op,expression);
 		}else if(isKind(OP_MINUS)){
 			match(OP_MINUS);
-			unaryExpression();
+			Expression expression = unaryExpression();
+			return new ExpressionUnary(firstToken,op,expression);
 		}else{
 			if(isKind(OP_EXCLAMATION)){
 				match(OP_EXCLAMATION);
-				unaryExpression();
+				Expression expression = unaryExpression();
+				return new ExpressionUnary(firstToken,op,expression);
 			}else{
-				primary();
+				Expression expression = primary();
+				return expression;
 			}
 		}
 
 	}
-	public void primary() throws SyntaxException {
+	public Expression primary() throws SyntaxException {
+		//todo
+		Token firstToken = t;
+		Expression expression = null;
 		if(isKind(INTEGER_LITERAL)){
+			Token intLiteral = t;
 			match(INTEGER_LITERAL);
+			expression = new ExpressionIntegerLiteral(firstToken,intLiteral);
 		}else if(isKind(BOOLEAN_LITERAL)){
 			match(BOOLEAN_LITERAL);
 		}else if(isKind(FLOAT_LITERAL)){
@@ -241,7 +305,9 @@ public class SimpleParser {
 		}else if(isKind(functionName)){
 			functionApplication();
 		}else if(isKind(IDENTIFIER)){
+			Token name = t;
 			match(IDENTIFIER);
+			expression = new ExpressionIdent(firstToken,name);
 			if(isKind(LSQUARE)){
 				pixelSelector();
 			}
@@ -258,6 +324,7 @@ public class SimpleParser {
 		}else{
 			throw new SyntaxException(t,"Invalid primary "+t.kind+" "+t.posInLine());
 		}
+		return expression;
 	}
 
 	public void functionApplication() throws SyntaxException{
@@ -337,52 +404,66 @@ public class SimpleParser {
 		}
 	}
 
-	public void statementInput() throws SyntaxException{
+	public Statement statementInput() throws SyntaxException{
+		StatementInput  statementInput = null;
 		match(KW_input);
 		match(IDENTIFIER);
 		match(KW_from);
 		match(OP_AT);
 		expression();
+		return null;
 	}
 
-	public void statementWrite() throws SyntaxException{
+	public Statement statementWrite() throws SyntaxException{
+		//todo
 		match(KW_write);
 		match(IDENTIFIER);
 		match(KW_to);
 		match(IDENTIFIER);
+		return null;
 	}
-	public void  statementAssignment() throws SyntaxException{
+	public Statement  statementAssignment() throws SyntaxException{
+		//todo
 		LHS();
 		match(OP_ASSIGN);
 		expression();
+		return null;
 	}
 
-	public void statementWhile() throws SyntaxException{
+	public Statement statementWhile() throws SyntaxException{
+		//todo
 		match(KW_while);
 		match(LPAREN);
 		expression();
 		match(RPAREN);
 		block();
+		return null;
 	}
 
-	public void statementIf() throws SyntaxException{
+	public Statement statementIf() throws SyntaxException{
+		//todo
 		match(KW_if);
 		match(LPAREN);
 		expression();
 		match(RPAREN);
 		block();
+		return null;
 	}
 
-	public void statementShow() throws SyntaxException{
+	public Statement statementShow() throws SyntaxException{
+		//todo
 		match(KW_show);
 		expression();
+		return null;
 	}
 
-	public void statementSleep() throws SyntaxException{
+	public Statement statementSleep() throws SyntaxException{
+		//todo
 		match(KW_sleep);
 		expression();
+		return null;
 	}
-	public void LHS() throws SyntaxException{
+	public Statement LHS() throws SyntaxException{
 		if(isKind(IDENTIFIER)){
 			match(IDENTIFIER);
 			if(isKind(LSQUARE)){
@@ -397,6 +478,7 @@ public class SimpleParser {
 		}else{
 			throw new SyntaxException(t,"Invalid LHS");
 		}
+		return null;
 	}
 
 	public void color() throws SyntaxException {
@@ -408,17 +490,19 @@ public class SimpleParser {
 			match(KW_blue);
 		} else if (isKind(KW_alpha)){
 			match(KW_alpha);
-		}else{
-			throw new SyntaxException(t,"Invalid color");
+		}else {
+			throw new SyntaxException(t, "Invalid color");
 		}
 	}
 
-	public void pixelSelector() throws SyntaxException {
+	public Expression pixelSelector() throws SyntaxException {
+		//todo
 		match(LSQUARE);
 		expression();
 		match(COMMA);
 		expression();
 		match(RSQUARE);
+		return null;
 	}
 
 	protected boolean isKind(Kind kind) {

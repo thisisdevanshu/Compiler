@@ -17,9 +17,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import cop5556sp18.SimpleParser;
-import cop5556sp18.Scanner;
-import cop5556sp18.SimpleParser.SyntaxException;
+import cop5556sp18.Parser.SyntaxException;
 import cop5556sp18.Scanner.LexicalException;
 
 public class SimpleParserTest {
@@ -39,11 +37,11 @@ public class SimpleParserTest {
 
 
 	//creates and returns a parser for the given input.
-	private SimpleParser makeParser(String input) throws LexicalException {
+	private Parser makeParser(String input) throws LexicalException {
 		show(input);        //Display the input 
 		Scanner scanner = new Scanner(input).scan();  //Create a Scanner and initialize it
 		show(scanner);   //Display the Scanner
-		SimpleParser parser = new SimpleParser(scanner);
+		Parser parser = new Parser(scanner);
 		return parser;
 	}
 	
@@ -60,7 +58,7 @@ public class SimpleParserTest {
 	@Test
 	public void testEmpty() throws LexicalException, SyntaxException {
 		String input = "";  //The input is the empty string.  
-		SimpleParser parser = makeParser(input);
+		Parser parser = makeParser(input);
 		thrown.expect(SyntaxException.class);
 		parser.parse();
 	}
@@ -74,7 +72,7 @@ public class SimpleParserTest {
 	@Test
 	public void testSmallest() throws LexicalException, SyntaxException {
 		String input = "b{}";  
-		SimpleParser parser = makeParser(input);
+		Parser parser = makeParser(input);
 		parser.parse();
 	}	
 	
@@ -84,7 +82,7 @@ public class SimpleParserTest {
 	@Test
 	public void testDec0() throws LexicalException, SyntaxException {
 		String input = "b{int c;}";
-		SimpleParser parser = makeParser(input);
+		Parser parser = makeParser(input);
 		parser.parse();
 	}
 
@@ -96,7 +94,7 @@ public class SimpleParserTest {
 				"image d; " +
 				"filename e; " +
 				"image f [true,4]; }";
-		SimpleParser parser = makeParser(input);
+		Parser parser = makeParser(input);
 		parser.parse();
 	}
 
@@ -108,7 +106,7 @@ public class SimpleParserTest {
 				"if (false){}; " +
 				"show atan(1);" +
 				"sleep Z; }";
-		SimpleParser parser = makeParser(input);
+		Parser parser = makeParser(input);
 		parser.parse();
 	}
 
@@ -119,7 +117,7 @@ public class SimpleParserTest {
 				"red ( IDENTIFIER  [ 3+5+2-1-5 , 9**9/3%2 ] ):= 45 != 9;" +
 				"sleep true  ?  123.56  :  1;" +
 				"while(default_height){}; }";
-		SimpleParser parser = makeParser(input);
+		Parser parser = makeParser(input);
 		parser.parse();
 	}
 	@Test
@@ -130,8 +128,17 @@ public class SimpleParserTest {
 				"abc := int(6); xyz := float(2); ret := width(1234); b := height(456) != red(12) & green(234); " +
 				" qwe := blue(445) <= alpha(45);" +
 				" i := <<  Expression , Expression , Expression , Expression  >>;" +
-				" def := +a <= -r; }";
-		SimpleParser parser = makeParser(input);
+				" def := +a <= -r;" +
+				" }";
+		Parser parser = makeParser(input);
+		parser.parse();
+	}
+
+	@Test
+	public void testDec5() throws LexicalException, SyntaxException {
+		String input = "a{ i:=sin(a);" +
+				"k := ! default_height; }";
+		Parser parser = makeParser(input);
 		parser.parse();
 	}
 
