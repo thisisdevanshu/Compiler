@@ -523,7 +523,6 @@ public class Parser {
 		Token firstToken = t;
 		match(LSQUARE);
 		Expression ex = expression();
-		System.out.println(ex);
 		match(COMMA);
 		Expression ey = expression();
 		match(RSQUARE);
