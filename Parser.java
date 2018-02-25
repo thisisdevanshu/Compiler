@@ -152,7 +152,7 @@ public class Parser {
 			Expression trueExpression = expression();
 			match(OP_COLON);
 			Expression falseExpression = expression();
-			return new ExpressionConditional(firstToken,expression,trueExpression,falseExpression);
+			expression = new ExpressionConditional(firstToken,expression,trueExpression,falseExpression);
 		}
 		return expression;
 	}
@@ -164,7 +164,7 @@ public class Parser {
 			Token op = t;
 			match(OP_OR);
 			Expression rightExpression = andExpression();
-			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			leftExpression = new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -176,7 +176,7 @@ public class Parser {
 			Token op = t;
 			match(OP_AND);
 			Expression rightExpression =  eqExpression();
-			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			leftExpression = new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -192,7 +192,7 @@ public class Parser {
 				match(OP_NEQ);
 			}
 			Expression rightExpression =  relExpression();
-			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			leftExpression = new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -212,7 +212,7 @@ public class Parser {
 				match(OP_GE);
 			}
 			Expression rightExpression =  addExpression();
-			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			leftExpression = new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -228,7 +228,7 @@ public class Parser {
 				match(OP_MINUS);
 			}
 			Expression rightExpression =  multExpression();
-			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			leftExpression = new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -245,7 +245,7 @@ public class Parser {
 				match(OP_MOD);
 			}
 			Expression rightExpression =  powerExpression();
-			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			leftExpression = new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -257,7 +257,7 @@ public class Parser {
 			Token op = t;
 			match(OP_POWER);
 			Expression rightExpression =  powerExpression();
-			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			leftExpression = new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -265,24 +265,25 @@ public class Parser {
 	public Expression unaryExpression() throws SyntaxException {
 		Token firstToken = t;
 		Token op = t;
+		Expression expression = null;
 		if(isKind(OP_PLUS)){
 			match(OP_PLUS);
-			Expression expression = unaryExpression();
-			return new ExpressionUnary(firstToken,op,expression);
+			expression = unaryExpression();
+			expression = new ExpressionUnary(firstToken,op,expression);
 		}else if(isKind(OP_MINUS)){
 			match(OP_MINUS);
-			Expression expression = unaryExpression();
-			return new ExpressionUnary(firstToken,op,expression);
+			expression = unaryExpression();
+			expression = new ExpressionUnary(firstToken,op,expression);
 		}else{
 			if(isKind(OP_EXCLAMATION)){
 				match(OP_EXCLAMATION);
-				Expression expression = unaryExpression();
-				return new ExpressionUnary(firstToken,op,expression);
+				expression = unaryExpression();
+				expression = new ExpressionUnary(firstToken,op,expression);
 			}else{
-				Expression expression = primary();
-				return expression;
+				expression = primary();
 			}
 		}
+		return expression;
 	}
 	public Expression primary() throws SyntaxException {
 		Token firstToken = t;
