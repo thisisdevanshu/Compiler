@@ -18,7 +18,6 @@ import cop5556sp18.AST.*;
 import cop5556sp18.Scanner.Token;
 import cop5556sp18.Scanner.Kind;
 
-import javax.swing.plaf.nimbus.State;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -242,11 +241,11 @@ public class Parser {
 				match(OP_TIMES);
 			}else if(isKind(OP_DIV)){
 				match(OP_DIV);
-			}else{
+			}else  if(isKind(OP_MOD)){
 				match(OP_MOD);
 			}
 			Expression rightExpression =  powerExpression();
-			new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -258,7 +257,7 @@ public class Parser {
 			Token op = t;
 			match(OP_POWER);
 			Expression rightExpression =  powerExpression();
-			new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
+			return new ExpressionBinary(firstToken,leftExpression,op,rightExpression);
 		}
 		return leftExpression;
 	}
@@ -523,6 +522,7 @@ public class Parser {
 		Token firstToken = t;
 		match(LSQUARE);
 		Expression ex = expression();
+		System.out.println(ex);
 		match(COMMA);
 		Expression ey = expression();
 		match(RSQUARE);
