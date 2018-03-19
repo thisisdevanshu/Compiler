@@ -25,7 +25,7 @@ import static cop5556sp18.Scanner.Kind.*;
 
 
 public class Parser {
-	
+
 	@SuppressWarnings("serial")
 	public static class SyntaxException extends Exception {
 		Token t;
@@ -71,7 +71,7 @@ public class Parser {
 	Kind[] firstDec = { KW_int, KW_boolean, KW_image, KW_float, KW_filename };
 	Kind[] firstStatement = {KW_input, KW_write, KW_while, IDENTIFIER, KW_if, KW_show, KW_sleep, KW_red, KW_green, KW_blue,KW_alpha };
 	Kind[] functionName = {KW_sin, KW_cos, KW_atan, KW_abs, KW_log, KW_cart_x, KW_cart_y, KW_polar_a, KW_polar_r,
-	KW_int, KW_float, KW_width, KW_height, KW_red, KW_green, KW_blue, KW_alpha};
+			KW_int, KW_float, KW_width, KW_height, KW_red, KW_green, KW_blue, KW_alpha};
 	Kind[] predefinedName = {KW_Z, KW_default_height, KW_default_width};
 
 	public Block block() throws SyntaxException {
@@ -79,13 +79,13 @@ public class Parser {
 		List<ASTNode>  decsOrStatements = new ArrayList<>();
 		match(LBRACE);
 		while (isKind(firstDec)|| isKind(firstStatement)) {
-	     if (isKind(firstDec)) {
-			Declaration declaration = declaration();
-			 decsOrStatements.add(declaration);
-		} else if (isKind(firstStatement)) {
-			Statement statement = statement();
-			decsOrStatements.add(statement);
-		}
+			if (isKind(firstDec)) {
+				Declaration declaration = declaration();
+				decsOrStatements.add(declaration);
+			} else if (isKind(firstStatement)) {
+				Statement statement = statement();
+				decsOrStatements.add(statement);
+			}
 			match(SEMI);
 		}
 		match(RBRACE);
@@ -316,13 +316,13 @@ public class Parser {
 			}
 		}else if(isKind(predefinedName)){
 			Token name = t;
-				if(isKind(KW_Z)){
-					match(KW_Z);
-				}else if(isKind(KW_default_height)){
-					match(KW_default_height);
-				}else if(isKind(KW_default_width)){
-					match(KW_default_width);
-				}
+			if(isKind(KW_Z)){
+				match(KW_Z);
+			}else if(isKind(KW_default_height)){
+				match(KW_default_height);
+			}else if(isKind(KW_default_width)){
+				match(KW_default_width);
+			}
 			expression = new ExpressionPredefinedName(firstToken,name);
 		}else if(isKind(LPIXEL)){
 			expression = pixelConstructor();
@@ -392,16 +392,16 @@ public class Parser {
 
 	public Expression pixelConstructor() throws SyntaxException{
 		Token firstToken = t;
-			match(LPIXEL);
-			Expression alpha = expression();
-			match(COMMA);
-			Expression red = expression();
-			match(COMMA);
-			Expression green = expression();
-			match(COMMA);
-			Expression blue = expression();
-			match(RPIXEL);
-			return new ExpressionPixelConstructor(firstToken,alpha,red,green,blue);
+		match(LPIXEL);
+		Expression alpha = expression();
+		match(COMMA);
+		Expression red = expression();
+		match(COMMA);
+		Expression green = expression();
+		match(COMMA);
+		Expression blue = expression();
+		match(RPIXEL);
+		return new ExpressionPixelConstructor(firstToken,alpha,red,green,blue);
 	}
 
 	public void type() throws SyntaxException{
