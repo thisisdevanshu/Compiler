@@ -69,6 +69,12 @@ public class TypeCheckerTest {
 	}
 
 	@Test
+	public void expression12() throws Exception {
+		String input = "prog {int x; x:= 2; show x+4 > 2;}";
+		typeCheck(input);
+	}
+
+	@Test
 	public void expression2_fail() throws Exception {
 		String input = "prog { show 3+4*false; }"; //error, incompatible types in binary expression
 		thrown.expect(SemanticException.class);
