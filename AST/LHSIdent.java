@@ -17,7 +17,7 @@ import cop5556sp18.Scanner.Token;
 
 public class LHSIdent extends LHS {
 
-	//public final String name;
+	public final String name;
 
 	public LHSIdent(Token firstToken, Token name) {
 		super(firstToken);

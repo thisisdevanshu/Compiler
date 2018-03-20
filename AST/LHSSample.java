@@ -18,7 +18,7 @@ import cop5556sp18.Scanner.Token;
 
 public class LHSSample extends LHS {
 
-	//public final String name;
+	public final String name;
 	public final PixelSelector pixelSelector;
 	public final Kind color;
 

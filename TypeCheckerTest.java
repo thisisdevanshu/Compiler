@@ -85,4 +85,55 @@ public class TypeCheckerTest {
 			throw e;
 		}
 	}
+
+	@Test
+	public void dec1() throws Exception {
+		String input = "prog {if(true){ int x; x:= 2;}; show x;}";
+		thrown.expect(SemanticException.class);
+		try {
+			typeCheck(input);
+		}catch(SemanticException e){
+			show(e);
+			throw e;
+		}
+	}
+
+	@Test
+	public void dec2() throws Exception {
+		String input = "prog {int x; x := 2; if(true){ int x; x:= 2;}; if(false){show x;}; }";
+			typeCheck(input);
+
+	}
+
+	@Test
+	public void demo1() throws Exception {
+		String input = "demo1{image h;input h from @0;show h; sleep(4000); image g[width(h),height(h)];int x;x:=0;"
+		+ "while(x<width(g)){int y;y:=0;while(y<height(g)){g[x,y]:=h[y,x];y:=y+1;};x:=x+1;};show g;sleep(4000);}";
+		typeCheck(input);
+
+	}
+
+	@Test
+	public void makeRedImage() throws Exception {
+		String input = "makeRedImage{image im[256,256];int x;int y;x:=0;y:=0;while(x<width(im)) {y:=0;while(y<height(im)) {im[x,y]:=<<255,255,0,0>>;y:=y+1;};x:=x+1;};show im;}";
+		typeCheck(input);
+
+	}
+
+	@Test
+	public void polarR2() throws Exception {
+		String input = "PolarR2{image im[1024,1024];int x;x:=0;while(x<width(im)) {int y;y:=0;while(y<height(im)) " +
+				"{float p;p:=polar_r[x,y];int r;r:=int(p)%Z;im[x,y]:=<<Z,0,0,r>>;y:=y+1;};x:=x+1;};show im;}";
+		typeCheck(input);
+	}
+
+	@Test
+	public void samples() throws Exception {
+		String input = "samples{image bird; input bird from @0;show bird;sleep(4000);image bird2[width(bird)," +
+				"height(bird)];int x;x:=0;while(x<width(bird2)) {int y;y:=0;while(y<height(bird2)) " +
+				"{blue(bird2[x,y]):=red(bird[x,y]);green(bird2[x,y]):=blue(bird[x,y]);red(bird2[x,y]):=green(bird[x,y]);" +
+				"alpha(bird2[x,y]):=Z;y:=y+1;};x:=x+1;};show bird2;sleep(4000);}";
+		typeCheck(input);
+	}
+
 }

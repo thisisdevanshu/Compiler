@@ -16,7 +16,7 @@ public class TypeChecker implements ASTVisitor {
 		Token t;
 
 		public SemanticException(Token t, String message) {
-			super(message);
+			super(message +" "+ t.getText() +" at position "+t.pos);
 			this.t = t;
 		}
 	}
@@ -65,7 +65,7 @@ public class TypeChecker implements ASTVisitor {
 			Kind e1 = (Kind)declaration.width.visit(this,arg);
 			Kind e2 = (Kind)declaration.height.visit(this,arg);
 			if(e1 != Kind.KW_int || e2!=Kind.KW_int){
-				throw new SemanticException(declaration.firstToken,"Invalid Type");
+				throw new SemanticException(declaration.firstToken,"Invalid Type ");
 			}
 		}
 		return null;
@@ -119,7 +119,7 @@ public class TypeChecker implements ASTVisitor {
 			throw new SemanticException(expressionConditional.firstToken,"Invalid expressionConditional");
 		}
 		expressionConditional.type = Types.getType(trueExpression);
-		return null;
+		return trueExpression;
 	}
 
 	@Override
@@ -127,7 +127,6 @@ public class TypeChecker implements ASTVisitor {
 		Kind e1 = (Kind) expressionBinary.leftExpression.visit(this,arg);
 		Kind e2 = (Kind)expressionBinary.rightExpression.visit(this,arg);
 		Kind op = expressionBinary.op;
-		System.out.println(e1+" "+e2+" "+op);
 		if(op == Kind.OP_AND || op == Kind.OP_OR || op == Kind.OP_EQ ||  op == Kind.OP_NEQ ||
 				op == Kind.OP_GT ||  op == Kind.OP_GE ||  op == Kind.OP_LT ||  op == Kind.OP_LE){
 			if(e1 == e2){
@@ -150,6 +149,13 @@ public class TypeChecker implements ASTVisitor {
 			if( e1 == e2 && (e1 == Kind.KW_boolean || e1 == Kind.KW_int)){
 				expressionBinary.type = Types.getType(Kind.KW_float);
 				return Kind.KW_boolean;
+			}else{
+				throw new SemanticException(expressionBinary.rightExpression.firstToken,"Invalid Expression");
+			}
+		}else if(op == Kind.OP_MOD){
+			if( e1 == Kind.KW_int && e2 == Kind.KW_int){
+				expressionBinary.type = Types.getType(Kind.KW_int);
+				return Kind.KW_int;
 			}else{
 				throw new SemanticException(expressionBinary.rightExpression.firstToken,"Invalid Expression");
 			}
@@ -180,7 +186,7 @@ public class TypeChecker implements ASTVisitor {
 	public Object visitExpressionPredefinedName(ExpressionPredefinedName expressionPredefinedName, Object arg)
 			throws Exception {
 		expressionPredefinedName.type = Types.getType(Kind.KW_int);
-		return null;
+		return Kind.KW_int;
 	}
 
 	@Override
@@ -277,13 +283,14 @@ public class TypeChecker implements ASTVisitor {
 			throw new SemanticException(expressionPixelConstructor.firstToken,"Invalid expressionPixelConstructor");
 		}
 		expressionPixelConstructor.type = Types.getType(Kind.KW_int);
-		return null;
+		return Kind.KW_int;
 	}
 
 	@Override
 	public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws Exception {
-		Declaration declaration = symbolTable.lookup(statementAssign.lhs.name);
-		if(declaration.type != statementAssign.e.visit(this,arg)){
+		Kind lhs = (Kind)statementAssign.lhs.visit(this,arg);
+		if(lhs != statementAssign.e.visit(this,arg)){
+			System.out.println(lhs+ " "+statementAssign.e.visit(this,arg));
 			throw new SemanticException(statementAssign.firstToken,"Type mismatch in assignment");
 		}
 		return null;
@@ -292,7 +299,6 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitStatementShow(StatementShow statementShow, Object arg) throws Exception {
 		Kind e = (Kind) statementShow.e.visit(this,arg);
-		System.out.println(e == Kind.KW_boolean);
 		if (!(e == Kind.KW_int || e == Kind.KW_boolean || e == Kind.KW_float || e == Kind.KW_image)){
 			throw new SemanticException(statementShow.firstToken,"Invalid Type for show");
 		}
@@ -306,7 +312,7 @@ public class TypeChecker implements ASTVisitor {
 			throw new SemanticException(expressionPixel.firstToken,"Invalid expressionPixel");
 		}
 		expressionPixel.type = Types.getType(Kind.KW_int);
-		return null;
+		return Kind.KW_int;
 	}
 
 	@Override
@@ -327,7 +333,7 @@ public class TypeChecker implements ASTVisitor {
 		}else{
 			throw new SemanticException(lhsSample.firstToken,"Invalid lhsSample");
 		}
-		return null;
+		return Kind.KW_int;
 	}
 
 	@Override
@@ -338,7 +344,7 @@ public class TypeChecker implements ASTVisitor {
 		}else{
 			throw new SemanticException(lhsPixel.firstToken,"Invalid lhsPixel");
 		}
-		return null;
+		return Kind.KW_int;
 	}
 
 	@Override
@@ -349,7 +355,7 @@ public class TypeChecker implements ASTVisitor {
 		}else{
 			throw new SemanticException(lhsIdent.firstToken,"Invalid lhs ident");
 		}
-		return null;
+		return declaration.type;
 	}
 
 	@Override

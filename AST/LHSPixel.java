@@ -17,7 +17,7 @@ import cop5556sp18.Scanner.Token;
 
 public class LHSPixel extends LHS {
 
-	//public final String name;
+	public final String name;
 	public final PixelSelector pixelSelector;
 
 	public LHSPixel(Token firstToken, Token name, PixelSelector pixelSelector) {
