@@ -9,6 +9,7 @@ public class Types {
 		INTEGER, BOOLEAN, IMAGE, FLOAT, FILE, NONE;
 	}
 
+
 	public static Type getType(Kind kind) {
 		switch (kind) {
 		case KW_int: {

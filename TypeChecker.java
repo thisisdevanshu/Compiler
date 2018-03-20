@@ -104,10 +104,17 @@ public class TypeChecker implements ASTVisitor {
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
 		Kind ex = (Kind) pixelSelector.ex.visit(this,arg);
 		Kind ey = (Kind) pixelSelector.ey.visit(this,arg);
-		if( ex != ey || (ex != Kind.KW_int || ex != Kind.KW_float) ){
-			throw new SemanticException(pixelSelector.firstToken,"Invalid pixelSelector");
+		System.out.println(ex+" "+ey);
+		if( ex == ey){
+			if( ex == Kind.KW_int){
+				return ex;
+			}else if(ey == Kind.KW_float){
+				return ey;
+			}else{
+				throw new SemanticException(pixelSelector.firstToken,"Invalid pixelSelector");
+			}
 		}
-		return null;
+		throw new SemanticException(pixelSelector.firstToken,"Invalid pixelSelector");
 	}
 
 	@Override
@@ -127,29 +134,36 @@ public class TypeChecker implements ASTVisitor {
 		Kind e1 = (Kind) expressionBinary.leftExpression.visit(this,arg);
 		Kind e2 = (Kind)expressionBinary.rightExpression.visit(this,arg);
 		Kind op = expressionBinary.op;
-		if(op == Kind.OP_AND || op == Kind.OP_OR || op == Kind.OP_EQ ||  op == Kind.OP_NEQ ||
+		if(op == Kind.OP_EQ ||  op == Kind.OP_NEQ ||
 				op == Kind.OP_GT ||  op == Kind.OP_GE ||  op == Kind.OP_LT ||  op == Kind.OP_LE){
-			if(e1 == e2){
+			if(e1 == e2 && (e1 == Kind.KW_int || e1 == Kind.KW_float || e1 == Kind.KW_boolean)){
 				expressionBinary.type = Types.getType(Kind.KW_boolean);
 				return Kind.KW_boolean;
 			}else{
 				throw new SemanticException(expressionBinary.rightExpression.firstToken,"Invalid Expression");
 			}
 		}else if (op == Kind.OP_PLUS || op == Kind.OP_MINUS || op == Kind.OP_TIMES || op == Kind.OP_DIV || op == Kind.OP_POWER){
-			if(e1 == e2){
+			if(e1 == e2 && (e1 == Kind.KW_int || e1 == Kind.KW_float)){
 				expressionBinary.type = Types.getType(e1);
 				return e1;
-			}else if( e1 == Kind.KW_float || e2 == Kind.KW_float){
+			}else if( (e1 == Kind.KW_float && e2 == Kind.KW_int) || (e2 == Kind.KW_float && e1 == Kind.KW_int)){
 				expressionBinary.type = Types.getType(Kind.KW_float);
 				return Kind.KW_float;
 			}else{
 				throw new SemanticException(expressionBinary.rightExpression.firstToken,"Invalid Expression");
 			}
 		}else if( op == Kind.OP_AND || op == Kind.OP_OR){
-			if( e1 == e2 && (e1 == Kind.KW_boolean || e1 == Kind.KW_int)){
-				expressionBinary.type = Types.getType(Kind.KW_float);
-				return Kind.KW_boolean;
+			if( e1 == e2 ){
+				if(e1 == Kind.KW_boolean || e1 == Kind.KW_int){
+					expressionBinary.type = Types.getType(e1);
+					return e1;
+				}else{
+					throw new SemanticException(expressionBinary.rightExpression.firstToken,"Invalid Expression");
+				}
+
 			}else{
+				System.out.println(expressionBinary.leftExpression.type+" "+expressionBinary.rightExpression.type);
+				System.out.println(e1+" "+e2);
 				throw new SemanticException(expressionBinary.rightExpression.firstToken,"Invalid Expression");
 			}
 		}else if(op == Kind.OP_MOD){
@@ -165,8 +179,9 @@ public class TypeChecker implements ASTVisitor {
 
 	@Override
 	public Object visitExpressionUnary(ExpressionUnary expressionUnary, Object arg) throws Exception {
-		expressionUnary.type = Types.getType(expressionUnary.firstToken.kind);
-		return expressionUnary.firstToken.kind;
+		Kind expression = (Kind)expressionUnary.expression.visit(this,arg);
+		expressionUnary.type = Types.getType(expression);
+		return expression;
 	}
 
 	@Override
@@ -289,11 +304,11 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitStatementAssign(StatementAssign statementAssign, Object arg) throws Exception {
 		Kind lhs = (Kind)statementAssign.lhs.visit(this,arg);
-		if(lhs != statementAssign.e.visit(this,arg)){
-			System.out.println(lhs+ " "+statementAssign.e.visit(this,arg));
+		Kind expression = (Kind) statementAssign.e.visit(this,arg);
+		if(lhs != expression){
 			throw new SemanticException(statementAssign.firstToken,"Type mismatch in assignment");
 		}
-		return null;
+		return expression;
 	}
 
 	@Override
@@ -308,6 +323,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitExpressionPixel(ExpressionPixel expressionPixel, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(expressionPixel.name);
+		expressionPixel.pixelSelector.visit(this,arg);
 		if(declaration == null || declaration.type != Kind.KW_image){
 			throw new SemanticException(expressionPixel.firstToken,"Invalid expressionPixel");
 		}
@@ -339,6 +355,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitLHSPixel(LHSPixel lhsPixel, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(lhsPixel.name);
+		System.out.println("pixel "+visitPixelSelector(lhsPixel.pixelSelector,arg));
 		if( declaration != null && declaration.type == Kind.KW_image ){
 			lhsPixel.type = Kind.KW_int;
 		}else{
