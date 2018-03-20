@@ -6,10 +6,10 @@ import java.util.*;
 
 public class SymbolTable {
 
+    Stack<Integer> scopeStack = new Stack<>();
+    Map<String, List<Value>> map = new HashMap<>();
     int currentScope;
     int nextScope;
-    Stack<Integer> scopeStack = new Stack<>();
-    Map<String, List<Value>> map = new HashMap <>();
 
     public void enterScope(){
         currentScope = nextScope++;
@@ -21,22 +21,19 @@ public class SymbolTable {
         currentScope = scopeStack.peek();
     }
 
-    public boolean insert(String ident, Declaration declaration){
+    public void insert(String ident, Declaration declaration){
         List<Value> values = new ArrayList<>();
-        Value p = new Value(currentScope, declaration);
-        if(map.containsKey(ident))
-        {
+        Value val = new Value(currentScope, declaration);
+        if(map.containsKey(ident)){
             values = map.get(ident);
-            for(Value value : values)
-            {
-                if( value.scope == currentScope ) {
-                    return false;
+            for(Value value : values){
+                if( value.scope == currentScope ){
+                    return ;
                 }
             }
         }
-        values.add(p);
+        values.add(val);
         map.put(ident, values);
-        return true;
     }
 
     public Declaration lookup(String ident){
@@ -45,8 +42,7 @@ public class SymbolTable {
         }
         Declaration declaration=null;
         List<Value> values = map.get(ident);
-        for(int i=values.size()-1;i>=0;i--)
-        {
+        for(int i = values.size()-1 ; i >= 0 ; i--){
             int temp_scope = values.get(i).scope;
             if(scopeStack.contains(temp_scope)){
                 declaration = values.get(i).declaration;
@@ -70,18 +66,16 @@ public class SymbolTable {
         return -1;
     }
 
-    public SymbolTable() {
+    public SymbolTable(){
         this.currentScope = 0;
         this.nextScope = 1;
         scopeStack.push(0);
     }
 
-    public class Value {
-
+    public class Value{
         public int scope;
         public Declaration declaration;
-
-        public Value(int scope, Declaration declaration) {
+        public Value(int scope, Declaration declaration){
             this.scope = scope;
             this.declaration = declaration;
         }

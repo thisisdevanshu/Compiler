@@ -88,7 +88,7 @@ public class TypeCheckerTest {
 
 	@Test
 	public void dec1() throws Exception {
-		String input = "prog {if(true){ int x; x:= 2;}; show x;}";
+		String input = "prog { if(true){ int x; x:= 2;}; show x;}";
 		thrown.expect(SemanticException.class);
 		try {
 			typeCheck(input);
@@ -115,7 +115,8 @@ public class TypeCheckerTest {
 
 	@Test
 	public void makeRedImage() throws Exception {
-		String input = "makeRedImage{image im[256,256];int x;int y;x:=0;y:=0;while(x<width(im)) {y:=0;while(y<height(im)) {im[x,y]:=<<255,255,0,0>>;y:=y+1;};x:=x+1;};show im;}";
+		String input = "makeRedImage{image im[256,256];int x;int y;x:=0;y:=0;while(x<width(im)) " +
+				"{y:=0;while(y<height(im)) {im[x,y]:=<<255,255,0,0>>;y:=y+1;};x:=x+1;};show im;}";
 		typeCheck(input);
 
 	}
