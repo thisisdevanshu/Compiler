@@ -55,7 +55,11 @@ public class TypeChecker implements ASTVisitor {
 		if(symbolTable.lookup(declaration.name) == null){
 			symbolTable.insert(declaration.name,declaration);
 		}else{
-			throw new SemanticException(declaration.firstToken,"Name Conflict");
+			if(symbolTable.getScope(declaration.name) != -1) {
+				throw new SemanticException(declaration.firstToken, "Name Conflict");
+			}else{
+				symbolTable.insert(declaration.name,declaration);
+			}
 		}
 		if(declaration.type == Kind.KW_image && declaration.width != null){
 			Kind e1 = (Kind)declaration.width.visit(this,arg);

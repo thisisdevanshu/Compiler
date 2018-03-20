@@ -69,7 +69,7 @@ public class TypeCheckerTest {
 	}
 
 	@Test
-	public void expression12() throws Exception {
+	public void expression2() throws Exception {
 		String input = "prog {int x; x:= 2; show x+4 > 2;}";
 		typeCheck(input);
 	}

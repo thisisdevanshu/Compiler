@@ -2,89 +2,88 @@ package cop5556sp18;
 
 import cop5556sp18.AST.Declaration;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 public class SymbolTable {
 
-    int  currentScope, nextScope;
+    int currentScope;
+    int nextScope;
     Stack<Integer> scopeStack = new Stack<>();
-    Map<String, ArrayList<Pair>> map = new HashMap <>();
+    Map<String, List<Value>> map = new HashMap <>();
 
-    public void enterScope()
-    {
+    public void enterScope(){
         currentScope = nextScope++;
         scopeStack.push(currentScope);
     }
 
-    public void leaveScope()
-    {
+    public void leaveScope(){
         scopeStack.pop();
         currentScope = scopeStack.peek();
     }
 
-    public boolean insert(String ident, Declaration declaration)
-    {
-        ArrayList<Pair> ps = new ArrayList<Pair>();
-        Pair p = new Pair(currentScope, declaration);
+    public boolean insert(String ident, Declaration declaration){
+        List<Value> values = new ArrayList<>();
+        Value p = new Value(currentScope, declaration);
         if(map.containsKey(ident))
         {
-            ps = map.get(ident);
-            for(Pair it: ps)
+            values = map.get(ident);
+            for(Value value : values)
             {
-                if(it.getScope()==currentScope)
+                if( value.scope == currentScope ) {
                     return false;
+                }
             }
         }
-        ps.add(p);
-        map.put(ident, ps);
+        values.add(p);
+        map.put(ident, values);
         return true;
     }
 
-    public Declaration lookup(String ident)
-    {
-        if(!map.containsKey(ident))
+    public Declaration lookup(String ident){
+        if(!map.containsKey(ident)){
             return null;
-
+        }
         Declaration declaration=null;
-        ArrayList<Pair> ps = map.get(ident);
-        for(int i=ps.size()-1;i>=0;i--)
+        List<Value> values = map.get(ident);
+        for(int i=values.size()-1;i>=0;i--)
         {
-            int temp_scope = ps.get(i).getScope();
-            if(scopeStack.contains(temp_scope))
-            {
-                declaration = ps.get(i).getDeclaration();
+            int temp_scope = values.get(i).scope;
+            if(scopeStack.contains(temp_scope)){
+                declaration = values.get(i).declaration;
                 break;
             }
         }
         return declaration;
     }
 
-    public SymbolTable()
-    {
+    public int getScope(String ident){
+        if(!map.containsKey(ident)){
+            return -1;
+        }
+        List<Value> values = map.get(ident);
+
+        for(Value value : values){
+            if(value.scope == currentScope){
+                return currentScope;
+            }
+        }
+        return -1;
+    }
+
+    public SymbolTable() {
         this.currentScope = 0;
         this.nextScope = 1;
         scopeStack.push(0);
     }
 
-    public class Pair
-    {
-        int scope;
-        Declaration declaration;
-        public Pair(int s, Declaration d)
-        {
-            this.scope = s;
-            this.declaration = d;
-        }
-        public int getScope()
-        {
-            return scope;
-        }
-        public Declaration getDeclaration()
-        {
-            return declaration;
+    public class Value {
+
+        public int scope;
+        public Declaration declaration;
+
+        public Value(int scope, Declaration declaration) {
+            this.scope = scope;
+            this.declaration = declaration;
         }
     }
 
