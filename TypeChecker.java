@@ -344,6 +344,8 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitLHSSample(LHSSample lhsSample, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(lhsSample.name);
+		// missed in assignment 4
+		lhsSample.pixelSelector.visit(this,arg);
 		if( declaration != null && declaration.type == Kind.KW_image ){
 			lhsSample.type = Kind.KW_int;
 		}else{
@@ -355,7 +357,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitLHSPixel(LHSPixel lhsPixel, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(lhsPixel.name);
-		System.out.println("pixel "+visitPixelSelector(lhsPixel.pixelSelector,arg));
+		lhsPixel.pixelSelector.visit(this,arg);
 		if( declaration != null && declaration.type == Kind.KW_image ){
 			lhsPixel.type = Kind.KW_int;
 		}else{

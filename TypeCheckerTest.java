@@ -937,11 +937,21 @@ public class TypeCheckerTest {
 			}
 		}
 
-		@Test
-		public void visitExpressionPredefinedName1() throws Exception {
-			String input = "prog { show(Z); }";
-			typeCheck(input);
-		}
+	/*	@Test
+	public void visitExpressionPredefinedName1() throws Exception {
+		String input = "prog{image var1; red( var1[0,0.0]) := 5;}";
+		typeCheck(input);
+	}
+	@Test
+	public void visitExpressionPredefinedName2() throws Exception {
+		String input = "prog{image var1; red( var1[0.0,0]) := 5;}";
+		typeCheck(input);
+	}
+	@Test
+	public void visitExpressionPredefinedName3() throws Exception {
+		String input = "prog{image var1; red( var1[true,false]) := 5;}";
+		typeCheck(input);
+	}*/
 
 	}
 
