@@ -193,6 +193,16 @@ public class CodeGenTest {
 		show("Log:\n"+RuntimeLog.globalLog);
 		assertEquals("entering main;4;leaving main;",RuntimeLog.globalLog.toString());
 	}
+	@Test
+	public void testUnary() throws Exception {
+		String prog = "testUnary";
+		String input = prog + "{show(!2);} ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
 
 	@Test
 	public void booleanLit() throws Exception {
@@ -208,7 +218,7 @@ public class CodeGenTest {
 	@Test
 	public void floatLit() throws Exception {
 		String prog = "floatLit";
-		String input = prog + "{show 2.5**2.5; } ";
+		String input = prog + "{show 1.0-9; } ";
 		byte[] bytecode = genCode(input);
 		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
 		runCode(prog, bytecode, commandLineArgs);
@@ -240,9 +250,53 @@ public class CodeGenTest {
 	@Test
 	public void testSleep() throws Exception {
 		String prog = "testDeclaration";
-		String input = prog + "{sleep(10000);} ";
+		String input = prog + "{/*sleep(10000);*/ show abs(3-5);} ";
 		byte[] bytecode = genCode(input);
 		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+
+	@Test
+	public void showImage() throws Exception {
+		String prog = "showImage";
+		String input = prog + "{image a[200,300]; show a; /*sleep(5000);*/} ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+
+	@Test
+	public void filename() throws Exception {
+		String prog = "test";
+		String input = prog + "{filename a; input a from @ 0;} ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+
+	@Test
+	public void args() throws Exception {
+		String prog = "test";
+		String input = prog + "{image a[200,300]; input a from @ 0; image b; b:=a; show b; /*sleep(5000);*/} ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+
+	@Test
+	public void args2() throws Exception {
+		String prog = "test";
+		String input = prog + "{float a; input a from @ 0; show a; } ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"8.7"}; //create command line argument array to initialize params, none in this case
 		runCode(prog, bytecode, commandLineArgs);
 		show("Log:\n"+RuntimeLog.globalLog);
 

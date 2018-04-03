@@ -140,12 +140,12 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 				declaration.width.visit(this,null);
 
 			}else{
-				mv.visitVarInsn(LDC,defaultHeight);
-				mv.visitVarInsn(LDC,defaultWidth);
+				mv.visitLdcInsn(defaultHeight);
+				mv.visitLdcInsn(defaultWidth);
 			}
 			mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "makeImage",
 					RuntimeImageSupport.makeImageSig, false);
-			mv.visitVarInsn(AASTORE,declaration.slotNumber);
+			mv.visitVarInsn(ASTORE,declaration.slotNumber);
 		}
 		return null;
 	}
@@ -271,7 +271,11 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		}else if(expressionBinary.leftExpression.type == Type.BOOLEAN && expressionBinary.rightExpression.type == Type.BOOLEAN){
 				expressionBinary.leftExpression.visit(this,arg);
 				expressionBinary.rightExpression.visit(this,arg);
-				if (op == Kind.OP_EQ) {
+				if (op == Kind.OP_AND) {
+					mv.visitInsn(IAND);
+				} else if (op == Kind.OP_OR) {
+					mv.visitInsn(IOR);
+				} else if (op == Kind.OP_EQ) {
 					Label f = new Label();
 					mv.visitJumpInsn(IF_ICMPNE, f);
 					mv.visitInsn(ICONST_1);
@@ -444,19 +448,25 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 			Object arg) throws Exception {
 		expressionFunctionAppWithExpressionArg.e.visit(this,arg);
 		Kind function = expressionFunctionAppWithExpressionArg.function;
-		mv.visitInsn(F2D);
-		if(function == Kind.KW_sin){
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","sin", "(D)D", false);
-		}else if(function == Kind.KW_cos){
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","cos", "(D)D", false);
-		}else if(function == Kind.KW_atan){
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","atan", "(D)D", false);
-		}else if(function == Kind.KW_log){
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","log", "(D)D", false);
-		}else if(function == Kind.KW_abs){
-			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","abs", "(D)D", false);
+		if(expressionFunctionAppWithExpressionArg.e.type == Type.INTEGER){
+			if(function == Kind.KW_abs){
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","abs", "(I)I", false);
+			}
+		}else {
+			mv.visitInsn(F2D);
+			if (function == Kind.KW_sin) {
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "sin", "(D)D", false);
+			} else if (function == Kind.KW_cos) {
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "cos", "(D)D", false);
+			} else if (function == Kind.KW_atan) {
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "atan", "(D)D", false);
+			} else if (function == Kind.KW_log) {
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "log", "(D)D", false);
+			} else if (function == Kind.KW_abs) {
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "abs", "(D)D", false);
+			}
+			mv.visitInsn(D2F);
 		}
-		mv.visitInsn(D2F);
 		return null;
 	}
 
@@ -477,9 +487,9 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		}else if(expressionIdent.type == Type.FLOAT){
 			mv.visitVarInsn(FLOAD, expressionIdent.dec.slotNumber);
 		}else if(expressionIdent.type == Type.FILE){
-			// todo
+			mv.visitVarInsn(ALOAD, expressionIdent.dec.slotNumber);
 		}else if(expressionIdent.type == Type.IMAGE){
-			//todo
+			mv.visitVarInsn(ALOAD, expressionIdent.dec.slotNumber);
 		}
 		return null;
 	}
@@ -512,15 +522,43 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	public Object visitExpressionPredefinedName(
 			ExpressionPredefinedName expressionPredefinedName, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if(expressionPredefinedName.firstToken.kind == Kind.KW_Z){
+			mv.visitLdcInsn(Z);
+		}else if(expressionPredefinedName.firstToken.kind == Kind.KW_default_height){
+			mv.visitLdcInsn(defaultHeight);
+		}else if(expressionPredefinedName.firstToken.kind == Kind.KW_default_width){
+			mv.visitLdcInsn(defaultWidth);
+		}
+		return null;
 	}
 
 	@Override
 	public Object visitExpressionUnary(ExpressionUnary expressionUnary,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expressionUnary.expression.visit(this,arg);
+		if(expressionUnary.op == Kind.OP_EXCLAMATION){
+			if(expressionUnary.expression.type == Type.INTEGER){
+				mv.visitLdcInsn(Integer.MAX_VALUE);
+				mv.visitInsn(IXOR);
+			}else if(expressionUnary.expression.type == Type.BOOLEAN){
+				if(expressionUnary.expression.firstToken.booleanVal() == true){
+					mv.visitInsn(POP);
+					mv.visitInsn(ICONST_0);
+				}else{
+					mv.visitInsn(POP);
+					mv.visitInsn(ICONST_1);
+				}
+				//todo
+			}
+		}else if(expressionUnary.op == Kind.OP_MINUS){
+			if(expressionUnary.expression.type == Type.INTEGER){
+				mv.visitInsn(INEG);
+			}else if(expressionUnary.expression.type == Type.FLOAT){
+				mv.visitInsn(FNEG);
+			}
+		}
+
+		return null;
 	}
 
 	@Override
@@ -531,9 +569,10 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		}else if(lhsIdent.type == Kind.KW_float){
 			mv.visitVarInsn(FSTORE, lhsIdent.dec.slotNumber);
 		}else if(lhsIdent.type == Kind.KW_filename){
-			//todo
+			mv.visitVarInsn(ASTORE, lhsIdent.dec.slotNumber);
 		}else if(lhsIdent.type == Kind.KW_image){
-			//todo
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC,"cop5556sp18/RuntimeImageSupport","deepCopy",RuntimeImageSupport.deepCopySig,false);
+			mv.visitVarInsn(ASTORE, lhsIdent.dec.slotNumber);
 		}
 		return null;
 	}
@@ -591,7 +630,8 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		mv.visitLabel(mainStart);
 
 		CodeGenUtils.genLog(DEVEL, mv, "entering main");
-
+		mv.visitLocalVariable("args", "[Ljava/lang/String;", null, mainStart,
+				mainEnd, 0);
 		program.block.visit(this, arg);
 
 		// generates code to add string to log
@@ -604,8 +644,7 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 
 		mv.visitLabel(mainEnd);
 
-		mv.visitLocalVariable("args", "[Ljava/lang/String;", null, mainStart,
-				mainEnd, 0);
+
 		// Because we use ClassWriter.COMPUTE_FRAMES as a parameter in the
 		// constructor,
 		// asm will calculate this itself and the parameters are ignored.
@@ -644,10 +683,33 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatementInput(StatementInput statementInput, Object arg)
 			throws Exception {
+		mv.visitVarInsn(ALOAD,0);
 		statementInput.e.visit(this,arg);
-		int index = ((ExpressionIntegerLiteral) statementInput.e).value;
-		mv.visitVarInsn(AALOAD, index);
-		//todo
+		mv.visitInsn(AALOAD);
+		if(statementInput.dec.type == Kind.KW_int){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Integer","parseInt", "(Ljava/lang/String;)I", false);
+			mv.visitVarInsn(ISTORE,statementInput.dec.slotNumber);
+		}else if(statementInput.dec.type == Kind.KW_float){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Float","parseFloat", "(Ljava/lang/String;)F", false);
+			mv.visitVarInsn(FSTORE,statementInput.dec.slotNumber);
+		}else if(statementInput.dec.type == Kind.KW_boolean){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Boolean","parseBoolean", "(Ljava/lang/String;)Z", false);
+			mv.visitVarInsn(ISTORE,statementInput.dec.slotNumber);
+		}else if(statementInput.dec.type == Kind.KW_image){
+			if(statementInput.dec.height != null && statementInput.dec.width != null) {
+				statementInput.dec.height.visit(this,arg);
+				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+				statementInput.dec.width.visit(this,arg);
+				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+			}else{
+				mv.visitInsn(ACONST_NULL);
+				mv.visitInsn(ACONST_NULL);
+			}
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC,"cop5556sp18/RuntimeImageSupport","readImage",RuntimeImageSupport.readImageSig,false);
+			mv.visitVarInsn(ASTORE,statementInput.dec.slotNumber);
+		}else if(statementInput.dec.type == Kind.KW_filename){
+			mv.visitVarInsn(ASTORE,statementInput.dec.slotNumber);
+		}
 		return null;
 	}
 
@@ -697,11 +759,9 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 			// it.
 			case IMAGE : {
 				CodeGenUtils.genLogTOS(GRADE, mv, type);
-				mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out",
-						"Ljava/io/PrintStream;");
-				mv.visitInsn(Opcodes.SWAP);
-				mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
-						"println", "(Ljava/awt/image/BufferedImage;)V", false);
+				mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "makeFrame",
+						RuntimeImageSupport.makeFrameSig, false);
+
 			}
 
 		}
