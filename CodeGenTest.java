@@ -186,13 +186,65 @@ public class CodeGenTest {
 	@Test
 	public void integerLit() throws Exception {
 		String prog = "intgegerLit";
-		String input = prog + "{show 3;} ";	
+		String input = prog + "{show 3+2-1;} ";
 		byte[] bytecode = genCode(input);		
 		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case		
 		runCode(prog, bytecode, commandLineArgs);	
 		show("Log:\n"+RuntimeLog.globalLog);
-		assertEquals("entering main;3;leaving main;",RuntimeLog.globalLog.toString());
+		assertEquals("entering main;4;leaving main;",RuntimeLog.globalLog.toString());
 	}
-	
 
+	@Test
+	public void booleanLit() throws Exception {
+		String prog = "booleanLit";
+		String input = prog + "{show true; } ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+
+	@Test
+	public void floatLit() throws Exception {
+		String prog = "floatLit";
+		String input = prog + "{show 2.5**2.5; } ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+	@Test
+	public void testFunc() throws Exception {
+		String prog = "testFunc";
+		String input = prog + "{show log(1.0);} ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+
+	@Test
+	public void testDeclaration() throws Exception {
+		String prog = "testDeclaration";
+		String input = prog + "{int a; int b; a := 10; b := 2; show a**b;} ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
+
+	@Test
+	public void testSleep() throws Exception {
+		String prog = "testDeclaration";
+		String input = prog + "{sleep(10000);} ";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+
+	}
 }

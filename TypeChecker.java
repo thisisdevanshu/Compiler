@@ -75,6 +75,8 @@ public class TypeChecker implements ASTVisitor {
 	public Object visitStatementWrite(StatementWrite statementWrite, Object arg) throws Exception {
 		Declaration source = symbolTable.lookup(statementWrite.sourceName);
 		Declaration destination = symbolTable.lookup(statementWrite.destName);
+		statementWrite.sourceDec = source;
+		statementWrite.destDec = destination;
 		if(source == null ){
 			throw new SemanticException(statementWrite.firstToken,"SourceName not defined");
 		}else if(destination == null){
@@ -90,6 +92,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitStatementInput(StatementInput statementInput, Object arg) throws Exception {
 		//check statementInput.destName on symbol table
+		statementInput.dec = symbolTable.lookup(statementInput.destName);
 		if(symbolTable.lookup(statementInput.destName) == null){
 			throw new SemanticException(statementInput.firstToken,"DestName not defined");
 		}
@@ -323,6 +326,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitExpressionPixel(ExpressionPixel expressionPixel, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(expressionPixel.name);
+		expressionPixel.dec = declaration;
 		expressionPixel.pixelSelector.visit(this,arg);
 		if(declaration == null || declaration.type != Kind.KW_image){
 			throw new SemanticException(expressionPixel.firstToken,"Invalid expressionPixel");
@@ -334,6 +338,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitExpressionIdent(ExpressionIdent expressionIdent, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(expressionIdent.name);
+		expressionIdent.dec = declaration;
 		if(declaration == null){
 			throw new SemanticException(expressionIdent.firstToken,"Invalid expressionIdent");
 		}
@@ -344,6 +349,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitLHSSample(LHSSample lhsSample, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(lhsSample.name);
+		lhsSample.dec = declaration;
 		// missed in assignment 4
 		lhsSample.pixelSelector.visit(this,arg);
 		if( declaration != null && declaration.type == Kind.KW_image ){
@@ -357,6 +363,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitLHSPixel(LHSPixel lhsPixel, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(lhsPixel.name);
+		lhsPixel.dec = declaration;
 		lhsPixel.pixelSelector.visit(this,arg);
 		if( declaration != null && declaration.type == Kind.KW_image ){
 			lhsPixel.type = Kind.KW_int;
@@ -369,6 +376,7 @@ public class TypeChecker implements ASTVisitor {
 	@Override
 	public Object visitLHSIdent(LHSIdent lhsIdent, Object arg) throws Exception {
 		Declaration declaration = symbolTable.lookup(lhsIdent.name);
+		lhsIdent.dec = declaration;
 		if( declaration != null ){
 			lhsIdent.type = declaration.type;
 		}else{

@@ -19,6 +19,7 @@ public class StatementInput extends Statement {
 
 	public final String destName;
 	public final Expression e;
+	public Declaration dec;
 
 	public StatementInput(Token firstToken, Token destName, Expression e) {
 		super(firstToken);

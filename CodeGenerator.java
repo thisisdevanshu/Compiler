@@ -18,6 +18,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.FieldVisitor;
 
 import cop5556sp18.Types.Type;
 import cop5556sp18.AST.ASTNode;
@@ -48,8 +49,12 @@ import cop5556sp18.AST.StatementShow;
 import cop5556sp18.AST.StatementSleep;
 import cop5556sp18.AST.StatementWhile;
 import cop5556sp18.AST.StatementWrite;
+import cop5556sp18.Scanner.Kind;
 
 import cop5556sp18.CodeGenUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class CodeGenerator implements ASTVisitor, Opcodes {
 
@@ -63,6 +68,8 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	String className;
 	String classDesc;
 	String sourceFileName;
+
+	Map<String,Integer> indexMap = new HashMap<>();
 
 	MethodVisitor mv; // visitor of method currently under construction
 
@@ -85,6 +92,10 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	 * @param defaultHeight
 	 *            default height of images
 	 */
+	int slotNumber = 1;
+	Label start;
+	Label end;
+
 	public CodeGenerator(boolean DEVEL, boolean GRADE, String sourceFileName,
 			int defaultWidth, int defaultHeight) {
 		super();
@@ -108,22 +119,307 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	public Object visitBooleanLiteral(
 			ExpressionBooleanLiteral expressionBooleanLiteral, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		mv.visitLdcInsn(expressionBooleanLiteral.value);
+		return null;
 	}
 
 	@Override
 	public Object visitDeclaration(Declaration declaration, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+
+		String fieldName = declaration.name;
+		String fieldType = getASMType(declaration.type);
+		declaration.slotNumber = slotNumber++;
+
+		mv.visitLocalVariable(fieldName, fieldType, null,start, end, declaration.slotNumber);
+
+		//CodeGenUtils.genLogTOS(GRADE, mv, Types.getType(declaration.type));
+		if(declaration.type == Kind.KW_image) {
+			if (declaration.height != null || declaration.width != null) {
+				declaration.height.visit(this,null);
+				declaration.width.visit(this,null);
+
+			}else{
+				mv.visitVarInsn(LDC,defaultHeight);
+				mv.visitVarInsn(LDC,defaultWidth);
+			}
+			mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "makeImage",
+					RuntimeImageSupport.makeImageSig, false);
+			mv.visitVarInsn(AASTORE,declaration.slotNumber);
+		}
+		return null;
+	}
+
+	public String getASMType(Kind kind){
+		String fieldType = null;
+		if(kind == Kind.KW_int){
+			fieldType = "I";
+		}else if(kind == Kind.KW_float){
+			fieldType = "F";
+		}else if(kind == Kind.KW_boolean){
+			fieldType = "Z";
+		}else if(kind == Kind.KW_image){
+			fieldType = "Ljava/awt/image/BufferedImage;";
+		}else if(kind == Kind.KW_filename){
+			fieldType = "Ljava/lang/String;";
+		}
+		return fieldType;
+	}
+
+	public String getASMType(Type type){
+		String fieldType = null;
+		if(type == Type.INTEGER){
+			fieldType = "I";
+		}else if(type == Type.FLOAT){
+			fieldType = "F";
+		}else if(type == Type.BOOLEAN){
+			fieldType = "Z";
+		}else if(type == Type.IMAGE){
+			fieldType = "Ljava/awt/image/BufferedImage;";
+		}else if(type == Type.FILE){
+			fieldType = "Ljava/lang/String;";
+		}
+		return fieldType;
 	}
 
 	@Override
 	public Object visitExpressionBinary(ExpressionBinary expressionBinary,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+
+		Kind op = expressionBinary.op;
+		if(expressionBinary.leftExpression.type == Type.INTEGER && expressionBinary.rightExpression.type == Type.INTEGER) {
+			expressionBinary.leftExpression.visit(this,arg);
+			expressionBinary.rightExpression.visit(this,arg);
+			if (op == Kind.OP_PLUS) {
+				mv.visitInsn(IADD);
+			} else if (op == Kind.OP_MINUS) {
+				mv.visitInsn(ISUB);
+			} else if (op == Kind.OP_TIMES) {
+				mv.visitInsn(IMUL);
+			} else if (op == Kind.OP_DIV) {
+				mv.visitInsn(IDIV);
+			} else if (op == Kind.OP_MOD) {
+				mv.visitInsn(IREM);
+			} else if (op == Kind.OP_POWER) {
+				mv.visitInsn(POP);
+				mv.visitInsn(POP);
+				expressionBinary.leftExpression.visit(this,arg);
+				mv.visitInsn(I2D);
+				expressionBinary.rightExpression.visit(this,arg);
+				mv.visitInsn(I2D);
+				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","pow", "(DD)D", false);
+				mv.visitInsn(Opcodes.D2I);
+			} else if (op == Kind.OP_AND) {
+				mv.visitInsn(IAND);
+			} else if (op == Kind.OP_OR) {
+				mv.visitInsn(IOR);
+			} else if (op == Kind.OP_EQ) {
+				Label f = new Label();
+				mv.visitJumpInsn(IF_ICMPNE, f);
+				mv.visitInsn(ICONST_1);
+				Label t = new Label();
+				mv.visitJumpInsn(GOTO, t);
+				mv.visitLabel(f);
+				mv.visitInsn(ICONST_0);
+				mv.visitLabel(t);
+			} else if (op == Kind.OP_NEQ) {
+				Label f = new Label();
+				mv.visitJumpInsn(IF_ICMPEQ, f);
+				mv.visitInsn(ICONST_1);
+				Label t = new Label();
+				mv.visitJumpInsn(GOTO, t);
+				mv.visitLabel(f);
+				mv.visitInsn(ICONST_0);
+				mv.visitLabel(t);
+			} else if (op == Kind.OP_LE) {
+				Label f = new Label();
+				mv.visitJumpInsn(IF_ICMPGT, f);
+				mv.visitInsn(ICONST_1);
+				Label t = new Label();
+				mv.visitJumpInsn(GOTO, t);
+				mv.visitLabel(f);
+				mv.visitInsn(ICONST_0);
+				mv.visitLabel(t);
+			} else if (op == Kind.OP_LT) {
+				Label f = new Label();
+				mv.visitJumpInsn(IF_ICMPGE, f);
+				mv.visitInsn(ICONST_1);
+				Label t = new Label();
+				mv.visitJumpInsn(GOTO, t);
+				mv.visitLabel(f);
+				mv.visitInsn(ICONST_0);
+				mv.visitLabel(t);
+			} else if (op == Kind.OP_GE) {
+				Label f = new Label();
+				mv.visitJumpInsn(IF_ICMPLT, f);
+				mv.visitInsn(ICONST_1);
+				Label t = new Label();
+				mv.visitJumpInsn(GOTO, t);
+				mv.visitLabel(f);
+				mv.visitInsn(ICONST_0);
+				mv.visitLabel(t);
+			} else if (op == Kind.OP_GT) {
+				Label f = new Label();
+				mv.visitJumpInsn(IF_ICMPLE, f);
+				mv.visitInsn(ICONST_1);
+				Label t = new Label();
+				mv.visitJumpInsn(GOTO, t);
+				mv.visitLabel(f);
+				mv.visitInsn(ICONST_0);
+				mv.visitLabel(t);
+			}
+		}else if(expressionBinary.leftExpression.type == Type.BOOLEAN && expressionBinary.rightExpression.type == Type.BOOLEAN){
+				expressionBinary.leftExpression.visit(this,arg);
+				expressionBinary.rightExpression.visit(this,arg);
+				if (op == Kind.OP_EQ) {
+					Label f = new Label();
+					mv.visitJumpInsn(IF_ICMPNE, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_NEQ) {
+					Label f = new Label();
+					mv.visitJumpInsn(IF_ICMPEQ, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_LE) {
+					Label f = new Label();
+					mv.visitJumpInsn(IF_ICMPGT, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_LT) {
+					Label f = new Label();
+					mv.visitJumpInsn(IF_ICMPGE, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_GE) {
+					Label f = new Label();
+					mv.visitJumpInsn(IF_ICMPLT, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_GT) {
+					Label f = new Label();
+					mv.visitJumpInsn(IF_ICMPLE, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				}
+			}else if(expressionBinary.leftExpression.type == Type.FLOAT || expressionBinary.rightExpression.type == Type.FLOAT){
+
+				expressionBinary.leftExpression.visit(this,arg);
+				if(expressionBinary.leftExpression.type == Type.INTEGER) {
+					mv.visitInsn(Opcodes.I2F);
+				}
+				expressionBinary.rightExpression.visit(this,arg);
+				if(expressionBinary.rightExpression.type == Type.INTEGER) {
+					mv.visitInsn(Opcodes.I2F);
+				}
+
+				if (op == Kind.OP_PLUS) {
+					mv.visitInsn(FADD);
+				} else if (op == Kind.OP_MINUS) {
+					mv.visitInsn(FSUB);
+				} else if (op == Kind.OP_TIMES) {
+					mv.visitInsn(FMUL);
+				} else if (op == Kind.OP_DIV) {
+					mv.visitInsn(FDIV);
+				} else if (op == Kind.OP_MOD) {
+					mv.visitInsn(FREM);
+				} else if (op == Kind.OP_POWER) {
+					mv.visitInsn(POP);
+					mv.visitInsn(POP);
+					expressionBinary.leftExpression.visit(this,arg);
+					if(expressionBinary.leftExpression.type == Type.INTEGER) {
+						mv.visitInsn(Opcodes.I2F);
+					}
+					mv.visitInsn(Opcodes.F2D);
+					expressionBinary.rightExpression.visit(this,arg);
+					if(expressionBinary.rightExpression.type == Type.INTEGER) {
+						mv.visitInsn(Opcodes.I2F);
+					}
+					mv.visitInsn(Opcodes.F2D);
+					mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","pow", "(DD)D", false);
+					mv.visitInsn(Opcodes.D2F);
+				}else if (op == Kind.OP_EQ) {
+					Label f = new Label();
+					mv.visitJumpInsn(IFNE, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_NEQ) {
+					Label f = new Label();
+					mv.visitJumpInsn(IFEQ, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_LE) {
+					Label f = new Label();
+					mv.visitJumpInsn(IFGT, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_LT) {
+					Label f = new Label();
+					mv.visitJumpInsn(IFGE, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_GE) {
+					Label f = new Label();
+					mv.visitJumpInsn(IFLT, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				} else if (op == Kind.OP_GT) {
+					Label f = new Label();
+					mv.visitJumpInsn(IFLE, f);
+					mv.visitInsn(ICONST_1);
+					Label t = new Label();
+					mv.visitJumpInsn(GOTO, t);
+					mv.visitLabel(f);
+					mv.visitInsn(ICONST_0);
+					mv.visitLabel(t);
+				}
+			}
+
+		return null;
 	}
 
 	@Override
@@ -138,16 +434,30 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	public Object visitExpressionFloatLiteral(
 			ExpressionFloatLiteral expressionFloatLiteral, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		mv.visitLdcInsn(expressionFloatLiteral.value);
+		return null;
 	}
 
 	@Override
 	public Object visitExpressionFunctionAppWithExpressionArg(
 			ExpressionFunctionAppWithExpressionArg expressionFunctionAppWithExpressionArg,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expressionFunctionAppWithExpressionArg.e.visit(this,arg);
+		Kind function = expressionFunctionAppWithExpressionArg.function;
+		mv.visitInsn(F2D);
+		if(function == Kind.KW_sin){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","sin", "(D)D", false);
+		}else if(function == Kind.KW_cos){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","cos", "(D)D", false);
+		}else if(function == Kind.KW_atan){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","atan", "(D)D", false);
+		}else if(function == Kind.KW_log){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","log", "(D)D", false);
+		}else if(function == Kind.KW_abs){
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","abs", "(D)D", false);
+		}
+		mv.visitInsn(D2F);
+		return null;
 	}
 
 	@Override
@@ -161,8 +471,17 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitExpressionIdent(ExpressionIdent expressionIdent,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		//check for type and load accordingly
+		if(expressionIdent.type == Type.INTEGER || expressionIdent.type == Type.BOOLEAN) {
+			mv.visitVarInsn(ILOAD, expressionIdent.dec.slotNumber);
+		}else if(expressionIdent.type == Type.FLOAT){
+			mv.visitVarInsn(FLOAD, expressionIdent.dec.slotNumber);
+		}else if(expressionIdent.type == Type.FILE){
+			// todo
+		}else if(expressionIdent.type == Type.IMAGE){
+			//todo
+		}
+		return null;
 	}
 
 	@Override
@@ -207,8 +526,16 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitLHSIdent(LHSIdent lhsIdent, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if(lhsIdent.type == Kind.KW_int || lhsIdent.type == Kind.KW_boolean) {
+			mv.visitVarInsn(ISTORE, lhsIdent.dec.slotNumber);
+		}else if(lhsIdent.type == Kind.KW_float){
+			mv.visitVarInsn(FSTORE, lhsIdent.dec.slotNumber);
+		}else if(lhsIdent.type == Kind.KW_filename){
+			//todo
+		}else if(lhsIdent.type == Kind.KW_image){
+			//todo
+		}
+		return null;
 	}
 
 	@Override
@@ -258,6 +585,9 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 
 		// add label before first instruction
 		Label mainStart = new Label();
+		Label mainEnd = new Label();
+		start = mainStart;
+		end = mainEnd;
 		mv.visitLabel(mainStart);
 
 		CodeGenUtils.genLog(DEVEL, mv, "entering main");
@@ -271,8 +601,9 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		mv.visitInsn(RETURN);
 
 		// adds label at end of code
-		Label mainEnd = new Label();
+
 		mv.visitLabel(mainEnd);
+
 		mv.visitLocalVariable("args", "[Ljava/lang/String;", null, mainStart,
 				mainEnd, 0);
 		// Because we use ClassWriter.COMPUTE_FRAMES as a parameter in the
@@ -298,8 +629,9 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatementAssign(StatementAssign statementAssign,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		statementAssign.e.visit(this,arg);
+		statementAssign.lhs.visit(this,arg);
+		return null;
 	}
 
 	@Override
@@ -312,8 +644,11 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatementInput(StatementInput statementInput, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		statementInput.e.visit(this,arg);
+		int index = ((ExpressionIntegerLiteral) statementInput.e).value;
+		mv.visitVarInsn(AALOAD, index);
+		//todo
+		return null;
 	}
 
 	@Override
@@ -342,22 +677,31 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 				break;
 			case BOOLEAN : {
 				CodeGenUtils.genLogTOS(GRADE, mv, type);
-				// TODO implement functionality
-				throw new UnsupportedOperationException();
+				mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out",
+						"Ljava/io/PrintStream;");
+				mv.visitInsn(Opcodes.SWAP);
+				mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
+						"println", "(Z)V", false);
 			}
-			// break; commented out because currently unreachable. You will need
+			break; //commented out because currently unreachable. You will need
 			// it.
 			case FLOAT : {
 				CodeGenUtils.genLogTOS(GRADE, mv, type);
-				// TODO implement functionality
-				throw new UnsupportedOperationException();
+				mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out",
+						"Ljava/io/PrintStream;");
+				mv.visitInsn(Opcodes.SWAP);
+				mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
+						"println", "(F)V", false);
 			}
-			// break; commented out because currently unreachable. You will need
+			 break; //commented out because currently unreachable. You will need
 			// it.
 			case IMAGE : {
 				CodeGenUtils.genLogTOS(GRADE, mv, type);
-				// TODO implement functionality
-				throw new UnsupportedOperationException();
+				mv.visitFieldInsn(Opcodes.GETSTATIC, "java/lang/System", "out",
+						"Ljava/io/PrintStream;");
+				mv.visitInsn(Opcodes.SWAP);
+				mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/io/PrintStream",
+						"println", "(Ljava/awt/image/BufferedImage;)V", false);
 			}
 
 		}
@@ -367,8 +711,10 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatementSleep(StatementSleep statementSleep, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		statementSleep.duration.visit(this,arg);
+		mv.visitInsn(Opcodes.I2L);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Thread","sleep", "(J)V", false);
+		return null;
 	}
 
 	@Override

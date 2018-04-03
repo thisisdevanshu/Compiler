@@ -19,6 +19,7 @@ import cop5556sp18.Scanner.Kind;
 public abstract class LHS extends ASTNode {
 
 	public Kind type;
+	public Declaration dec;
 	public LHS(Token firstToken) {
 		super(firstToken);
 	}

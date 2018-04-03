@@ -18,7 +18,7 @@ import cop5556sp18.Scanner.Token;
 public class ExpressionIdent extends Expression {
 
 	public final String name;
-
+	public Declaration dec;
 	public ExpressionIdent(Token firstToken, Token name) {
 		super(firstToken);
 		this.name = name.getText();

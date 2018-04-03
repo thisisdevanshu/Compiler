@@ -19,6 +19,7 @@ public class ExpressionPixel extends Expression {
 
 	public final String name;
 	public final PixelSelector pixelSelector;
+	public Declaration dec;
 
 	public ExpressionPixel(Token firstToken, Token name,
 			PixelSelector pixelSelector) {
