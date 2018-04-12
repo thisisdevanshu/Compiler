@@ -109,9 +109,11 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitBlock(Block block, Object arg) throws Exception {
 		// TODO refactor and extend as necessary
+
 		for (ASTNode node : block.decsOrStatements) {
 			node.visit(this, null);
 		}
+
 		return null;
 	}
 
@@ -136,12 +138,11 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		//CodeGenUtils.genLogTOS(GRADE, mv, Types.getType(declaration.type));
 		if(declaration.type == Kind.KW_image) {
 			if (declaration.height != null || declaration.width != null) {
-				declaration.height.visit(this,null);
 				declaration.width.visit(this,null);
-
+				declaration.height.visit(this,null);
 			}else{
-				mv.visitLdcInsn(defaultHeight);
 				mv.visitLdcInsn(defaultWidth);
+				mv.visitLdcInsn(defaultHeight);
 			}
 			mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "makeImage",
 					RuntimeImageSupport.makeImageSig, false);
@@ -451,21 +452,61 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		if(expressionFunctionAppWithExpressionArg.e.type == Type.INTEGER){
 			if(function == Kind.KW_abs){
 				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math","abs", "(I)I", false);
+			}else if(function == Kind.KW_red){
+				mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimePixelOps", "getRed",
+						RuntimePixelOps.getRedSig, false);
+			}else if(function == Kind.KW_green){
+				mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimePixelOps", "getGreen",
+						RuntimePixelOps.getGreenSig, false);
+			}else if(function == Kind.KW_blue){
+				mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimePixelOps", "getBlue",
+						RuntimePixelOps.getBlueSig, false);
+			}else if(function == Kind.KW_alpha){
+				mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimePixelOps", "getAlpha",
+						RuntimePixelOps.getAlphaSig, false);
 			}
-		}else {
-			mv.visitInsn(F2D);
+			else if(function == Kind.KW_int){
+
+			}
+			else if(function == Kind.KW_float){
+				mv.visitInsn(I2F);
+			}
+		}else if(expressionFunctionAppWithExpressionArg.e.type == Type.FLOAT){
+
 			if (function == Kind.KW_sin) {
+				mv.visitInsn(F2D);
 				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "sin", "(D)D", false);
+				mv.visitInsn(D2F);
 			} else if (function == Kind.KW_cos) {
+				mv.visitInsn(F2D);
 				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "cos", "(D)D", false);
+				mv.visitInsn(D2F);
 			} else if (function == Kind.KW_atan) {
+				mv.visitInsn(F2D);
 				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "atan", "(D)D", false);
+				mv.visitInsn(D2F);
 			} else if (function == Kind.KW_log) {
+				mv.visitInsn(F2D);
 				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "log", "(D)D", false);
+				mv.visitInsn(D2F);
 			} else if (function == Kind.KW_abs) {
+				mv.visitInsn(F2D);
 				mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "abs", "(D)D", false);
+				mv.visitInsn(D2F);
+			} else if(function == Kind.KW_int){
+				mv.visitInsn(F2I);
+			} else if(function == Kind.KW_float){
+
 			}
-			mv.visitInsn(D2F);
+
+		}else if(expressionFunctionAppWithExpressionArg.e.type == Type.IMAGE){
+		 	if(function == Kind.KW_height){
+				mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "getHeight",
+						RuntimeImageSupport.getHeightSig, false);
+			}else if(function == Kind.KW_width){
+				mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "getWidth",
+						RuntimeImageSupport.getWidthSig, false);
+			}
 		}
 		return null;
 	}
@@ -506,16 +547,25 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitExpressionPixel(ExpressionPixel expressionPixel,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		mv.visitVarInsn(ALOAD, expressionPixel.dec.slotNumber);
+		expressionPixel.pixelSelector.visit(this,arg);
+		mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "getPixel",
+				RuntimeImageSupport.getPixelSig, false);
+		return null;
 	}
 
 	@Override
 	public Object visitExpressionPixelConstructor(
 			ExpressionPixelConstructor expressionPixelConstructor, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expressionPixelConstructor.alpha.visit(this,arg);
+		expressionPixelConstructor.red.visit(this,arg);
+		expressionPixelConstructor.green.visit(this,arg);
+		expressionPixelConstructor.blue.visit(this,arg);
+		mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimePixelOps", "makePixel",
+				RuntimePixelOps.makePixelSig, false);
+
+		return null;
 	}
 
 	@Override
@@ -538,17 +588,11 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 		expressionUnary.expression.visit(this,arg);
 		if(expressionUnary.op == Kind.OP_EXCLAMATION){
 			if(expressionUnary.expression.type == Type.INTEGER){
-				mv.visitLdcInsn(Integer.MAX_VALUE);
+				mv.visitLdcInsn(-1);
 				mv.visitInsn(IXOR);
 			}else if(expressionUnary.expression.type == Type.BOOLEAN){
-				if(expressionUnary.expression.firstToken.booleanVal() == true){
-					mv.visitInsn(POP);
-					mv.visitInsn(ICONST_0);
-				}else{
-					mv.visitInsn(POP);
-					mv.visitInsn(ICONST_1);
-				}
-				//todo
+				mv.visitLdcInsn(1);
+				mv.visitInsn(IXOR);
 			}
 		}else if(expressionUnary.op == Kind.OP_MINUS){
 			if(expressionUnary.expression.type == Type.INTEGER){
@@ -580,22 +624,36 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitLHSPixel(LHSPixel lhsPixel, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		mv.visitVarInsn(ASTORE,lhsPixel.dec.slotNumber);
+		lhsPixel.pixelSelector.visit(this,arg);
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC,"cop5556sp18/RuntimeImageSupport","setPixel",RuntimeImageSupport.setPixelSig,false);
+		return null;
 	}
 
 	@Override
 	public Object visitLHSSample(LHSSample lhsSample, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		mv.visitVarInsn(ASTORE,lhsSample.dec.slotNumber);
+		lhsSample.pixelSelector.visit(this,arg);
+		if(lhsSample.color ==  Kind.KW_alpha){
+			mv.visitLdcInsn(ICONST_0);
+		}else if(lhsSample.color == Kind.KW_red){
+			mv.visitLdcInsn(ICONST_1);
+		}else if(lhsSample.color == Kind.KW_green){
+			mv.visitLdcInsn(ICONST_2);
+		}else if(lhsSample.color == Kind.KW_blue){
+			mv.visitLdcInsn(ICONST_3);
+		}
+		mv.visitMethodInsn(Opcodes.INVOKESTATIC,"cop5556sp18/RuntimeImageSupport","updatePixelColor",RuntimeImageSupport.updatePixelColorSig,false);
+		return null;
 	}
 
 	@Override
 	public Object visitPixelSelector(PixelSelector pixelSelector, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		pixelSelector.ex.visit(this,arg);
+		pixelSelector.ey.visit(this,arg);
+		return null;
 	}
 
 	@Override
@@ -697,10 +755,11 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 			mv.visitVarInsn(ISTORE,statementInput.dec.slotNumber);
 		}else if(statementInput.dec.type == Kind.KW_image){
 			if(statementInput.dec.height != null && statementInput.dec.width != null) {
-				statementInput.dec.height.visit(this,arg);
-				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
 				statementInput.dec.width.visit(this,arg);
 				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+				statementInput.dec.height.visit(this,arg);
+				mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+
 			}else{
 				mv.visitInsn(ACONST_NULL);
 				mv.visitInsn(ACONST_NULL);
@@ -787,8 +846,13 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatementWrite(StatementWrite statementWrite, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+
+		mv.visitVarInsn(ALOAD,statementWrite.sourceDec.slotNumber);
+		mv.visitVarInsn(ALOAD,statementWrite.destDec.slotNumber);
+		statementWrite.destDec.visit(this,arg);
+		mv.visitMethodInsn(INVOKESTATIC, "cop5556sp18/RuntimeImageSupport", "write",
+				RuntimeImageSupport.writeSig, false);
+		return null;
 	}
 
 }
