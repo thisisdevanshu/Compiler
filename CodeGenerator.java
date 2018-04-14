@@ -431,8 +431,16 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	public Object visitExpressionConditional(
 			ExpressionConditional expressionConditional, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expressionConditional.guard.visit(this,arg);
+		Label f = new Label();
+		mv.visitJumpInsn(IFEQ, f);
+		expressionConditional.trueExpression.visit(this,arg);
+		Label t = new Label();
+		mv.visitJumpInsn(GOTO, t);
+		mv.visitLabel(f);
+		expressionConditional.falseExpression.visit(this,arg);
+		mv.visitLabel(t);
+		return null;
 	}
 
 	@Override
@@ -515,8 +523,38 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	public Object visitExpressionFunctionAppWithPixel(
 			ExpressionFunctionAppWithPixel expressionFunctionAppWithPixel,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if(expressionFunctionAppWithPixel.name == Kind.KW_cart_x){
+			expressionFunctionAppWithPixel.e0.visit(this,arg);
+			mv.visitInsn(F2D);
+			expressionFunctionAppWithPixel.e1.visit(this,arg);
+			mv.visitInsn(F2D);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "cos", "(D)D", false);
+			mv.visitInsn(DMUL);
+			mv.visitInsn(D2I);
+		}else if(expressionFunctionAppWithPixel.name == Kind.KW_cart_y){
+			expressionFunctionAppWithPixel.e0.visit(this,arg);
+			mv.visitInsn(F2D);
+			expressionFunctionAppWithPixel.e1.visit(this,arg);
+			mv.visitInsn(F2D);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "sin", "(D)D", false);
+			mv.visitInsn(DMUL);
+			mv.visitInsn(D2I);
+		}else if(expressionFunctionAppWithPixel.name == Kind.KW_polar_a){
+			expressionFunctionAppWithPixel.e1.visit(this,arg);
+			mv.visitInsn(I2D);
+			expressionFunctionAppWithPixel.e0.visit(this,arg);
+			mv.visitInsn(I2D);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "atan2", "(DD)D", false);
+			mv.visitInsn(D2F);
+		}else if(expressionFunctionAppWithPixel.name == Kind.KW_polar_r){
+			expressionFunctionAppWithPixel.e0.visit(this,arg);
+			mv.visitInsn(I2D);
+			expressionFunctionAppWithPixel.e1.visit(this,arg);
+			mv.visitInsn(I2D);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "hypot", "(DD)D", false);
+			mv.visitInsn(D2F);
+		}
+		return null;
 	}
 
 	@Override
@@ -734,8 +772,12 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatementIf(StatementIf statementIf, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		statementIf.guard.visit(this,arg);
+		Label f = new Label();
+		mv.visitJumpInsn(IFEQ,f);
+		statementIf.b.visit(this,arg);
+		mv.visitLabel(f);
+		return null;
 	}
 
 	@Override
@@ -839,8 +881,15 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitStatementWhile(StatementWhile statementWhile, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		Label t = new Label();
+		mv.visitLabel(t);
+		statementWhile.guard.visit(this,arg);
+		Label f = new Label();
+		mv.visitJumpInsn(IFEQ,f);
+		statementWhile.b.visit(this,arg);
+		mv.visitJumpInsn(GOTO,t);
+		mv.visitLabel(f);
+		return null;
 	}
 
 	@Override

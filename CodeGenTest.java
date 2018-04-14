@@ -416,4 +416,77 @@ public class CodeGenTest {
 		show("Log:\n"+RuntimeLog.globalLog);
 	}
 
+	@Test
+	public void args14() throws Exception {
+		String prog = "prog";
+		String input = "prog{show false ? 3 : 8;}";
+		//             "prog{int a; a := 123456789; show alpha(a);\n a := -1; show alpha(a);}".
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args16() throws Exception {
+		String prog = "prog";
+		String input = "prog{if(false){ show 1.3;}; if(true){show 2;};}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args17() throws Exception {
+		String prog = "prog";
+		String input = "prog{int a ; a:= 10; while(a>0){int b; b := 5; show a+b; a := a-1;};}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args17_5() throws Exception {
+		String prog = "prog";
+		String input = "prog{image bird; input bird from @0; show red(bird[1,2]);show green(bird[1,2]);show blue(bird[1,2]);}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args18() throws Exception {
+		String prog = "prog";
+		String input = "prog{" +
+				"image bird;" +
+				" input bird from @0;" +
+				"show bird;" +
+				"sleep(4000);" +
+				"image bird2[width(bird),height(bird)];" +
+				"int x;" +
+				"x := 0;" +
+				"blue(bird2[1,1]):= red(bird[1,1]);"+
+				"while(x<width(bird2)) {" +
+					"int y;" +
+					"y := 0;" +
+					"while(y<height(bird2)) {" +
+						"bird2[x,y]:= red(bird[x,y]);" +
+						//"green(bird2[x,y]):= blue(bird[x,y]);" +
+						//"red(bird2[x,y]):= green(bird[x,y]);" +
+						//"alpha(bird2[x,y]):= Z;" +
+						"y := y+1;};" +
+					"x :=x+1;" +
+					"};" +
+				"show bird2;" +
+				"sleep(4000);" +
+				"}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
 }
