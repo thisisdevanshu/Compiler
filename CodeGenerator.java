@@ -369,6 +369,7 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 					mv.visitInsn(Opcodes.D2F);
 				}else if (op == Kind.OP_EQ) {
 					Label f = new Label();
+					mv.visitInsn(FCMPG);
 					mv.visitJumpInsn(IFNE, f);
 					mv.visitInsn(ICONST_1);
 					Label t = new Label();
@@ -378,6 +379,7 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 					mv.visitLabel(t);
 				} else if (op == Kind.OP_NEQ) {
 					Label f = new Label();
+					mv.visitInsn(FCMPG);
 					mv.visitJumpInsn(IFEQ, f);
 					mv.visitInsn(ICONST_1);
 					Label t = new Label();
@@ -387,6 +389,7 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 					mv.visitLabel(t);
 				} else if (op == Kind.OP_LE) {
 					Label f = new Label();
+					mv.visitInsn(FCMPG);
 					mv.visitJumpInsn(IFGT, f);
 					mv.visitInsn(ICONST_1);
 					Label t = new Label();
@@ -396,6 +399,7 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 					mv.visitLabel(t);
 				} else if (op == Kind.OP_LT) {
 					Label f = new Label();
+					mv.visitInsn(FCMPG);
 					mv.visitJumpInsn(IFGE, f);
 					mv.visitInsn(ICONST_1);
 					Label t = new Label();
@@ -405,6 +409,7 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 					mv.visitLabel(t);
 				} else if (op == Kind.OP_GE) {
 					Label f = new Label();
+					mv.visitInsn(FCMPL);
 					mv.visitJumpInsn(IFLT, f);
 					mv.visitInsn(ICONST_1);
 					Label t = new Label();
@@ -414,6 +419,7 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 					mv.visitLabel(t);
 				} else if (op == Kind.OP_GT) {
 					Label f = new Label();
+					mv.visitInsn(FCMPL);
 					mv.visitJumpInsn(IFLE, f);
 					mv.visitInsn(ICONST_1);
 					Label t = new Label();

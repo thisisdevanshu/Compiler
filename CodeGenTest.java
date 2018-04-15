@@ -482,9 +482,11 @@ public class CodeGenTest {
 					"};" +
 				"show bird2;" +
 				"sleep(4000);" +
+				"filename f; input f from @1;"+
+				"write bird2 to f;" +
 				"}";
 		byte[] bytecode = genCode(input);
-		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg","/Users/devanshusingh/Desktop/out.jpeg"}; //create command line argument array to initialize params, none in this case
 		runCode(prog, bytecode, commandLineArgs);
 		show("Log:\n"+RuntimeLog.globalLog);
 	}
@@ -525,6 +527,16 @@ public class CodeGenTest {
 	public void args22() throws Exception {
 		String prog = "PolarR2";
 		String input ="PolarR2{image im[1024,1024];int x;x:=0;while(x<width(im)) {int y;y:=0;while(y<height(im)) {float p;p:=polar_r[x,y];int r;r:=int(p)%Z;im[x,y]:=<<Z,0,0,r>>;y:=y+1;};x:=x+1;};show im; sleep 4000;}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args23() throws Exception {
+		String prog = "prog";
+		String input ="prog{float x; x:=3.5; if( 3.0 <= 3.15){show(10);}; show(20);}";
 		byte[] bytecode = genCode(input);
 		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
 		runCode(prog, bytecode, commandLineArgs);
