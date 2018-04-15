@@ -662,7 +662,8 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitLHSPixel(LHSPixel lhsPixel, Object arg)
 			throws Exception {
-		mv.visitVarInsn(ASTORE,lhsPixel.dec.slotNumber);
+		//mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
+		mv.visitVarInsn(ALOAD,lhsPixel.dec.slotNumber);
 		lhsPixel.pixelSelector.visit(this,arg);
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC,"cop5556sp18/RuntimeImageSupport","setPixel",RuntimeImageSupport.setPixelSig,false);
 		return null;
@@ -671,16 +672,16 @@ public class CodeGenerator implements ASTVisitor, Opcodes {
 	@Override
 	public Object visitLHSSample(LHSSample lhsSample, Object arg)
 			throws Exception {
-		mv.visitVarInsn(ASTORE,lhsSample.dec.slotNumber);
+		mv.visitVarInsn(ALOAD,lhsSample.dec.slotNumber);
 		lhsSample.pixelSelector.visit(this,arg);
 		if(lhsSample.color ==  Kind.KW_alpha){
-			mv.visitLdcInsn(ICONST_0);
+			mv.visitLdcInsn(RuntimePixelOps.ALPHA);
 		}else if(lhsSample.color == Kind.KW_red){
-			mv.visitLdcInsn(ICONST_1);
+			mv.visitLdcInsn(RuntimePixelOps.RED);
 		}else if(lhsSample.color == Kind.KW_green){
-			mv.visitLdcInsn(ICONST_2);
+			mv.visitLdcInsn(RuntimePixelOps.GREEN);
 		}else if(lhsSample.color == Kind.KW_blue){
-			mv.visitLdcInsn(ICONST_3);
+			mv.visitLdcInsn(RuntimePixelOps.BLUE);
 		}
 		mv.visitMethodInsn(Opcodes.INVOKESTATIC,"cop5556sp18/RuntimeImageSupport","updatePixelColor",RuntimeImageSupport.updatePixelColorSig,false);
 		return null;

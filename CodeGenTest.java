@@ -450,7 +450,7 @@ public class CodeGenTest {
 	@Test
 	public void args17_5() throws Exception {
 		String prog = "prog";
-		String input = "prog{image bird; input bird from @0; show red(bird[1,2]);show green(bird[1,2]);show blue(bird[1,2]);}";
+		String input = "prog{image bird; input bird from @0; show bird[1,2]; show green(bird[1,2]);show blue(bird[1,2]); red(bird[1,2]) := 10;}";
 		byte[] bytecode = genCode(input);
 		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
 		runCode(prog, bytecode, commandLineArgs);
@@ -474,9 +474,9 @@ public class CodeGenTest {
 					"y := 0;" +
 					"while(y<height(bird2)) {" +
 						"bird2[x,y]:= red(bird[x,y]);" +
-						//"green(bird2[x,y]):= blue(bird[x,y]);" +
-						//"red(bird2[x,y]):= green(bird[x,y]);" +
-						//"alpha(bird2[x,y]):= Z;" +
+						"green(bird2[x,y]):= blue(bird[x,y]);" +
+						"red(bird2[x,y]):= green(bird[x,y]);" +
+						"alpha(bird2[x,y]):= Z;" +
 						"y := y+1;};" +
 					"x :=x+1;" +
 					"};" +
@@ -489,4 +489,45 @@ public class CodeGenTest {
 		show("Log:\n"+RuntimeLog.globalLog);
 	}
 
+	@Test
+	public void args19() throws Exception {
+		String prog = "prog";
+		String input = "prog{show polar_a[1,1]; show polar_r[1,1]; show cart_x[polar_r[1,1],polar_a[1,1]];show cart_y[polar_r[1,1],polar_a[1,1]];}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args20() throws Exception {
+		String prog = "demo1";
+		String input =
+				"demo1{image h;input h from @0;show h; sleep(4000); image g[width(h),height(h)];int x;x:=0;"
+						+ "while(x<width(g)){int y;y:=0;while(y<height(g)){g[x,y]:=h[y,x];y:=y+1;};x:=x+1;};show g;sleep 4000;}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args21() throws Exception {
+		String prog = "makeRedImage";
+		String input ="makeRedImage{image im[256,256];int x;int y;x:=0;y:=0;while(x<width(im)) {y:=0;while(y<height(im)) {im[x,y]:=<<255,255,0,0>>;y:=y+1;};x:=x+1;};show im; sleep 4000;}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
+
+	@Test
+	public void args22() throws Exception {
+		String prog = "PolarR2";
+		String input ="PolarR2{image im[1024,1024];int x;x:=0;while(x<width(im)) {int y;y:=0;while(y<height(im)) {float p;p:=polar_r[x,y];int r;r:=int(p)%Z;im[x,y]:=<<Z,0,0,r>>;y:=y+1;};x:=x+1;};show im; sleep 4000;}";
+		byte[] bytecode = genCode(input);
+		String[] commandLineArgs = {"/Users/devanshusingh/Desktop/test.jpeg"}; //create command line argument array to initialize params, none in this case
+		runCode(prog, bytecode, commandLineArgs);
+		show("Log:\n"+RuntimeLog.globalLog);
+	}
 }
